@@ -1,0 +1,320 @@
+// ── Angular Material Theme ──────────────────────────────────────────
+@use '@angular/material' as mat;
+
+$primary: mat.define-palette(mat.$blue-palette, 800);
+$accent:  mat.define-palette(mat.$blue-palette, A200, A100, A400);
+$warn:    mat.define-palette(mat.$red-palette);
+
+$theme: mat.define-light-theme((
+  color: (primary: $primary, accent: $accent, warn: $warn),
+  typography: mat.define-typography-config(
+    $font-family: "'Be Vietnam Pro', sans-serif"
+  ),
+  density: 0
+));
+
+@include mat.all-component-themes($theme);
+
+// ── Reset & Base ────────────────────────────────────────────────────
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%; width: 100%; margin: 0;
+  font-family: 'Be Vietnam Pro', 'Segoe UI', Tahoma, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #1a1a2e;
+  background: #f0f2f5;
+  // Windows dùng ClearType (subpixel) — tốt hơn antialiased cho tiếng Việt
+  -webkit-font-smoothing: auto;
+  text-rendering: optimizeSpeed;
+  font-optical-sizing: auto;
+}
+
+app-root { display: block; height: 100%; width: 100%; }
+
+// ── Typography Scale ────────────────────────────────────────────────
+// line-height cao hơn để dấu thanh tiếng Việt (à á ả ã ạ) không bị cắt
+h1 { font-size: 28px; font-weight: 700; line-height: 1.5;  margin: 0; }
+h2 { font-size: 22px; font-weight: 600; line-height: 1.55; margin: 0; }
+h3 { font-size: 18px; font-weight: 600; line-height: 1.6;  margin: 0; }
+h4 { font-size: 15px; font-weight: 600; line-height: 1.65; margin: 0; }
+p  { margin: 0; line-height: 1.75; }
+
+.text-xs   { font-size: 11px; }
+.text-sm   { font-size: 12px; }
+.text-base { font-size: 14px; }
+.text-lg   { font-size: 16px; }
+.text-muted { color: #6b7280; }
+.text-label {
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.8px;
+  color: #9ca3af;
+}
+
+// ── Layout ──────────────────────────────────────────────────────────
+.page-container {
+  padding: 28px 32px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.flex-row   { display: flex; flex-direction: row; align-items: center; }
+.flex-col   { display: flex; flex-direction: column; }
+.flex-spacer { flex: 1 1 auto; }
+
+.gap-8  { gap: 8px; }
+.gap-12 { gap: 12px; }
+.gap-16 { gap: 16px; }
+.gap-24 { gap: 24px; }
+
+// ── Page Header ─────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  .page-title    { font-size: 22px; font-weight: 700; color: #111827; }
+  .page-subtitle { font-size: 13px; color: #6b7280; margin-top: 3px; }
+}
+
+// legacy alias
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+// ── Cards ───────────────────────────────────────────────────────────
+mat-card, .mat-mdc-card {
+  border-radius: 12px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06) !important;
+  border: 1px solid rgba(0,0,0,.06);
+}
+
+mat-card-title, .mat-mdc-card-title {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #111827 !important;
+}
+
+mat-card-subtitle, .mat-mdc-card-subtitle {
+  font-size: 12px !important;
+  color: #6b7280 !important;
+}
+
+// ── Form grid ───────────────────────────────────────────────────────
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);   // 3 cols on PC
+  gap: 0 16px;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0 16px;
+}
+
+.form-section {
+  margin-bottom: 4px;
+
+  mat-card-header { padding: 20px 20px 0 !important; }
+  mat-card-content { padding: 16px 20px 20px !important; }
+}
+
+.full-width { width: 100%; }
+
+// ── Tables ──────────────────────────────────────────────────────────
+.mat-mdc-table {
+  width: 100%;
+  font-family: 'Be Vietnam Pro', sans-serif !important;
+
+  th.mat-mdc-header-cell {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #6b7280 !important;
+    background: #f9fafb;
+    padding: 0 16px !important;
+    height: 44px;
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+
+  td.mat-mdc-cell {
+    font-size: 13.5px !important;
+    line-height: 1.6 !important;
+    color: #374151 !important;
+    padding: 8px 16px !important;
+    height: 54px;
+    border-bottom: 1px solid #f3f4f6 !important;
+  }
+
+  tr.mat-mdc-row:last-child td { border-bottom: none !important; }
+}
+
+.mat-mdc-row:hover td {
+  background: #f8faff !important;
+  cursor: pointer;
+}
+
+// ── Status chips ─────────────────────────────────────────────────────
+.status-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  white-space: nowrap;
+
+  &::before {
+    content: ''; width: 6px; height: 6px;
+    border-radius: 50%; background: currentColor; opacity: 0.8;
+  }
+
+  &.active     { background: #dcfce7; color: #15803d; }
+  &.inactive   { background: #fee2e2; color: #dc2626; }
+  &.probation  { background: #fef3c7; color: #d97706; }
+  &.on-leave   { background: #dbeafe; color: #1d4ed8; }
+  &.terminated { background: #f3e8ff; color: #7c3aed; }
+}
+
+// ── Buttons ──────────────────────────────────────────────────────────
+button.mat-mdc-raised-button {
+  font-family: 'Be Vietnam Pro', sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px !important;
+  border-radius: 8px !important;
+}
+
+button.mat-mdc-outlined-button,
+button.mat-mdc-stroked-button {
+  font-family: 'Be Vietnam Pro', sans-serif !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+}
+
+// ── Code tags ────────────────────────────────────────────────────────
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 12px;
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 2px 7px;
+  border-radius: 5px;
+  border: 1px solid #e2e8f0;
+}
+
+// ── Snackbar ─────────────────────────────────────────────────────────
+.success-snack .mat-mdc-snack-bar-label { color: #dcfce7; }
+.error-snack   .mat-mdc-snack-bar-label { color: #fee2e2; }
+
+// ── Loading overlay ───────────────────────────────────────────────────
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.25);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; backdrop-filter: blur(2px);
+}
+
+// ── Empty state ────────────────────────────────────────────────────────
+.empty-state {
+  padding: 60px 24px;
+  text-align: center;
+  color: #9ca3af;
+
+  mat-icon { font-size: 56px; width: 56px; height: 56px; opacity: .4; }
+  p { margin-top: 12px; font-size: 14px; }
+}
+
+// ── Mat Form Fields ────────────────────────────────────────────────────
+.mat-mdc-form-field {
+  font-family: 'Be Vietnam Pro', sans-serif !important;
+
+  .mdc-text-field { border-radius: 8px !important; }
+  .mat-mdc-form-field-subscript-wrapper { margin-top: 2px; }
+}
+
+// ── Mat Paginator ──────────────────────────────────────────────────────
+.mat-mdc-paginator {
+  font-family: 'Be Vietnam Pro', sans-serif !important;
+  border-top: 1px solid #f3f4f6;
+  color: #6b7280 !important;
+}
+
+// ── Sidebar styles → scoped in MainLayoutComponent ─────────────────────
+
+// ── Vietnamese font override cho Material components ───────────────────
+// Đảm bảo các component Angular Material dùng đúng font
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-flat-button,
+.mat-mdc-stroked-button,
+.mat-mdc-outlined-button,
+.mat-mdc-icon-button,
+.mat-mdc-fab,
+.mat-mdc-mini-fab,
+.mdc-button,
+.mdc-text-field,
+.mat-mdc-select,
+.mat-mdc-option,
+.mat-mdc-tooltip,
+.mat-mdc-dialog-container,
+.mat-mdc-snack-bar-container,
+.mat-mdc-chip,
+.mat-mdc-tab,
+.mat-mdc-menu-item {
+  font-family: 'Be Vietnam Pro', sans-serif !important;
+}
+
+// Input, select, textarea
+input, select, textarea, button {
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+// Đảm bảo line-height đủ cho dấu tiếng Việt (ắ ặ ổ ỡ ớ...)
+.mat-mdc-form-field input,
+.mat-mdc-form-field textarea,
+.mat-mdc-select-value-text,
+.mat-mdc-option-text,
+.mdc-text-field__input {
+  line-height: 1.7 !important;
+  font-family: 'Be Vietnam Pro', 'Segoe UI', Tahoma, Arial, sans-serif !important;
+}
+
+// Tăng chiều cao input để dấu không bị cắt trên/dưới
+.mat-mdc-form-field .mat-mdc-form-field-infix {
+  padding-top: 14px !important;
+  padding-bottom: 6px !important;
+}
+
+// ── Assignment dialog: remove default mat-dialog padding ─────────────────
+.assignment-dialog-panel {
+  .mat-mdc-dialog-container {
+    padding: 0 !important;
+    border-radius: 16px !important;
+    overflow: hidden;
+  }
+  .mdc-dialog__surface {
+    padding: 0 !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18) !important;
+  }
+}
+
+// ── Responsive breakpoints ─────────────────────────────────────────────
+@media (max-width: 1280px) {
+  .form-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .page-container { padding: 16px; }
+  .form-row, .form-row-2 { grid-template-columns: 1fr; }
+}
