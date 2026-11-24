@@ -6,6 +6,7 @@ import { environment } from '@environments/environment';
 
 export interface InternalOverviewItem {
   employeeId: number;
+  employeePublicId: string;
   employeeCode: string;
   fullName: string;
   totalRawHours: number;
@@ -13,7 +14,7 @@ export interface InternalOverviewItem {
   totalAdjustedDays: number;
   totalLeaveDays: number;
   totalHalfLeaveDays: number;
-  status: 'DRAFT' | 'CONFIRMED' | 'CLOSED' | 'NO_DATA';
+  status: 'DRAFT' | 'CONFIRMED' | 'NO_DATA';
 }
 
 export interface InternalCalendarDay {
@@ -22,6 +23,10 @@ export interface InternalCalendarDay {
   weekend: boolean;
   rawHours: number;
   adjustedHours: number;
+  rawOtHours: number;
+  adjustedOtHours: number;
+  otMultiplier: number;
+  otAdjustmentReason: string | null;
   leaveDay: boolean;
   halfLeave: boolean;
   paidLeave: boolean;
@@ -33,12 +38,15 @@ export interface InternalCalendarDay {
 
 export interface InternalEmployeeCalendar {
   employeeId: number;
+  employeePublicId: string;
   employeeCode: string;
   fullName: string;
   yearMonth: string;
   days: InternalCalendarDay[];
   totalRawHours: number;
   totalAdjustedHours: number;
+  totalRawOtHours: number;
+  totalAdjustedOtHours: number;
   totalAdjustedDays: number;
   totalLeaveDays: number;
   totalHalfLeaveDays: number;
@@ -54,44 +62,38 @@ export class InternalStatementService {
     return this.http.post<any>(`${this.api}/generate/${yearMonth}`, {}).pipe(map(() => undefined));
   }
 
-  generateForEmployee(employeeId: number, yearMonth: string): Observable<void> {
-    return this.http.post<any>(`${this.api}/${employeeId}/generate/${yearMonth}`, {}).pipe(map(() => undefined));
+  generateForEmployee(employeePublicId: string, yearMonth: string): Observable<void> {
+    return this.http.post<any>(`${this.api}/${employeePublicId}/generate/${yearMonth}`, {}).pipe(map(() => undefined));
   }
 
   getOverview(yearMonth: string): Observable<InternalOverviewItem[]> {
     return this.http.get<any>(`${this.api}/${yearMonth}/overview`).pipe(map(r => r.data));
   }
 
-  getEmployeeCalendar(yearMonth: string, employeeId: number): Observable<InternalEmployeeCalendar> {
-    return this.http.get<any>(`${this.api}/${yearMonth}/employee/${employeeId}`).pipe(map(r => r.data));
+  getEmployeeCalendar(yearMonth: string, employeePublicId: string): Observable<InternalEmployeeCalendar> {
+    return this.http.get<any>(`${this.api}/${yearMonth}/employee/${employeePublicId}`).pipe(map(r => r.data));
   }
 
-  updateDay(yearMonth: string, employeeId: number, date: string, adjustedHours: number, note: string): Observable<InternalCalendarDay> {
-    return this.http.put<any>(`${this.api}/${yearMonth}/employee/${employeeId}/day/${date}`,
-      { adjustedHours, note }).pipe(map(r => r.data));
+  updateDay(yearMonth: string, employeePublicId: string, date: string, adjustedHours: number,
+            adjustedOtHours: number, otMultiplier: number, otAdjustmentReason: string, note: string): Observable<InternalCalendarDay> {
+    return this.http.put<any>(`${this.api}/${yearMonth}/employee/${employeePublicId}/day/${date}`,
+      { adjustedHours, adjustedOtHours, otMultiplier, otAdjustmentReason, note }).pipe(map(r => r.data));
   }
 
-  confirmEmployee(yearMonth: string, employeeId: number): Observable<void> {
-    return this.http.post<any>(`${this.api}/${yearMonth}/employee/${employeeId}/confirm`, {}).pipe(map(() => undefined));
+  confirmEmployee(yearMonth: string, employeePublicId: string): Observable<void> {
+    return this.http.post<any>(`${this.api}/${yearMonth}/employee/${employeePublicId}/confirm`, {}).pipe(map(() => undefined));
   }
 
   confirmAll(yearMonth: string): Observable<void> {
     return this.http.post<any>(`${this.api}/${yearMonth}/confirm-all`, {}).pipe(map(() => undefined));
   }
 
-  unconfirmEmployee(yearMonth: string, employeeId: number): Observable<void> {
-    return this.http.post<any>(`${this.api}/${yearMonth}/employee/${employeeId}/unconfirm`, {}).pipe(map(() => undefined));
+  unconfirmEmployee(yearMonth: string, employeePublicId: string): Observable<void> {
+    return this.http.post<any>(`${this.api}/${yearMonth}/employee/${employeePublicId}/unconfirm`, {}).pipe(map(() => undefined));
   }
 
   exportExcel(yearMonth: string): Observable<Blob> {
     return this.http.get(`${this.api}/${yearMonth}/export`, { responseType: 'blob' });
   }
 
-  closeMonth(yearMonth: string, reason?: string): Observable<void> {
-    return this.http.post<any>(`${this.api}/${yearMonth}/close`, { reason }).pipe(map(() => undefined));
-  }
-
-  reopenMonth(yearMonth: string, reason: string): Observable<void> {
-    return this.http.post<any>(`${this.api}/${yearMonth}/reopen`, { reason }).pipe(map(() => undefined));
-  }
 }

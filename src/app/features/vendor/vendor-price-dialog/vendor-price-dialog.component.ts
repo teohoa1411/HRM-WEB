@@ -81,8 +81,9 @@ import { MoneyDirective } from '../../../shared/directives/money.directive';
               <div class="ff">
                 <label class="fl">Đơn vị tính <span class="req">*</span></label>
                 <select class="fi" formControlName="priceUnit">
-                  <option value="MONTHLY">Tháng (MONTHLY)</option>
+                  <option value="HOURLY">Giờ (HOURLY)</option>
                   <option value="DAILY">Ngày (DAILY)</option>
+                  <option value="MONTHLY">Tháng (MONTHLY)</option>
                 </select>
               </div>
               <div class="ff">
@@ -151,7 +152,7 @@ import { MoneyDirective } from '../../../shared/directives/money.directive';
                     <span class="pc-amount">{{ p.price | number:'1.0-0' }}</span>
                     <span class="pc-currency">{{ p.currency }}</span>
                     <span class="pc-unit" [class.unit-daily]="p.priceUnit === 'DAILY'">
-                      /{{ p.priceUnit === 'DAILY' ? 'ngày' : 'tháng' }}
+                      /{{ p.priceUnit === 'HOURLY' ? 'giờ' : p.priceUnit === 'DAILY' ? 'ngày' : 'tháng' }}
                     </span>
                   </div>
 

@@ -39,7 +39,7 @@ interface CustomerRow { id: number; name: string; statement?: Statement; }
         }
       </div>
 
-      @if (view() === 'list' && !timesheetLock()?.accountantConfirmed) {
+      @if (view() === 'list' && !timesheetLock()?.locked) {
         <div class="ts-gate-banner">
           <mat-icon>warning</mat-icon>
           <div>
@@ -47,17 +47,16 @@ interface CustomerRow { id: number; name: string; statement?: Statement; }
             <div style="font-size:13px;margin-top:2px;">
               Timesheet tháng <strong>{{ selectedMonth }}</strong>
               @if (!timesheetLock()?.locked) { chưa được HR khóa. }
-              @else { đã khóa nhưng <strong>chưa được Kế toán xác nhận</strong>. }
-              Vui lòng hoàn tất bước xác nhận timesheet trước khi tạo biên bản.
+              Vui lòng yêu cầu HR khóa timesheet trước khi tạo biên bản.
             </div>
           </div>
         </div>
       }
-      @if (view() === 'list' && timesheetLock()?.accountantConfirmed) {
+      @if (view() === 'list' && timesheetLock()?.locked) {
         <div class="ts-gate-banner ts-ok">
           <mat-icon>verified_user</mat-icon>
           <span>
-            Timesheet tháng <strong>{{ selectedMonth }}</strong> đã được Kế toán xác nhận — có thể tạo biên bản.
+              Timesheet tháng <strong>{{ selectedMonth }}</strong> đã được khóa — có thể tạo biên bản. Không cần chờ Kế toán xác nhận.
           </span>
         </div>
       }
@@ -94,9 +93,9 @@ interface CustomerRow { id: number; name: string; statement?: Statement; }
                       </span>
                     }
                     <button mat-stroked-button (click)="generateStatement(c)"
-                            [disabled]="!timesheetLock()?.accountantConfirmed"
-                            [matTooltip]="!timesheetLock()?.accountantConfirmed
-                                ? 'Cần Kế toán xác nhận timesheet trước'
+                            [disabled]="!timesheetLock()?.locked"
+                            [matTooltip]="!timesheetLock()?.locked
+                                ? 'Cần HR khóa timesheet trước'
                                 : ''">
                       <mat-icon>{{ c.statement ? 'refresh' : 'add' }}</mat-icon>
                       {{ c.statement ? 'Tạo lại' : 'Tạo biên bản' }}
@@ -197,7 +196,7 @@ interface CustomerRow { id: number; name: string; statement?: Statement; }
                     <mat-icon style="font-size:16px;width:16px;height:16px;vertical-align:middle;">lock</mat-icon>
                     ĐÃ ĐÓNG
                   </span>
-                  @if (authService.isCompanyAdmin()) {
+                  @if (authService.isStrictAdmin()) {
                     <button mat-stroked-button style="color:#059669;border-color:#059669;" (click)="reopenStatement()">
                       <mat-icon>lock_open</mat-icon> Mở lại
                     </button>
@@ -245,7 +244,7 @@ interface CustomerRow { id: number; name: string; statement?: Statement; }
               <thead>
                 <tr>
                   <th>STT</th><th>Mã NV</th><th>Họ tên</th>
-                  <th>Giờ gốc</th><th>Giờ ĐC</th><th>Ngày ĐC</th>
+                  <th>Giờ gốc</th><th>Giờ ĐC</th>
                   <th>Đơn giá</th><th>TT gốc</th><th>TT ĐC</th>
                   <th>Ghi chú</th><th></th>
                 </tr>
@@ -258,52 +257,25 @@ interface CustomerRow { id: number; name: string; statement?: Statement; }
                     <td style="font-weight:500;">{{ item.fullName }}</td>
                     <!-- Giờ gốc -->
                     <td style="text-align:right;color:#6b7280;">{{ item.originalHours || (item.originalDays * 8) | number:'1.1-1' }}h</td>
-                    <!-- Giờ điều chỉnh — highlight nếu khác gốc -->
+                    <!-- Giờ điều chỉnh được tổng hợp từ lịch giờ theo ngày -->
                     <td>
-                      @if (editingItemId() === item.id) {
-                        <input type="number" [(ngModel)]="editHours" min="0" max="999" step="0.5"
-                          style="width:70px;padding:3px 6px;border:1.5px solid #6366f1;border-radius:5px;text-align:right;font-family:inherit;font-size:13px;"
-                          (click)="$event.stopPropagation()">
-                      } @else {
-                        <span [class]="isHoursAdjusted(item) ? 'adjusted-value' : ''"
-                              style="font-size:13px;">
-                          {{ getAdjHours(item) | number:'1.1-1' }}h
+                      <span [class]="isHoursAdjusted(item) ? 'adjusted-value' : ''"
+                            style="font-size:13px;">
+                        {{ getAdjHours(item) | number:'1.1-1' }}h
+                      </span>
+                      @if (isHoursAdjusted(item)) {
+                        <span style="font-size:10px;color:#d97706;margin-left:4px;">
+                          ({{ getHoursDiff(item) > 0 ? '+' : '' }}{{ getHoursDiff(item) | number:'1.1-1' }}h)
                         </span>
-                        @if (isHoursAdjusted(item)) {
-                          <span style="font-size:10px;color:#d97706;margin-left:4px;">
-                            ({{ getHoursDiff(item) > 0 ? '+' : '' }}{{ getHoursDiff(item) | number:'1.1-1' }}h)
-                          </span>
-                        }
                       }
                     </td>
-                    <td style="text-align:right;font-size:12px;color:#9ca3af;">{{ item.adjustedDays | number:'1.1-2' }}d</td>
                     <td style="text-align:right;">{{ item.unitSellPrice | number:'1.0-0' }}</td>
                     <td style="text-align:right;color:#6b7280;">{{ item.originalAmount | number:'1.0-0' }}</td>
                     <td style="text-align:right;font-weight:600;color:#1565c0;">{{ item.adjustedAmount | number:'1.0-0' }}</td>
                     <td>
-                      @if (editingItemId() === item.id) {
-                        <input [(ngModel)]="editNote" placeholder="Ghi chú..."
-                          style="width:120px;padding:3px 6px;border:1.5px solid #6366f1;border-radius:5px;font-family:inherit;font-size:12px;"
-                          (click)="$event.stopPropagation()">
-                      } @else {
-                        <span style="font-size:12px;color:#6b7280;">{{ item.note || '' }}</span>
-                      }
+                      <span style="font-size:12px;color:#6b7280;">{{ item.note || '' }}</span>
                     </td>
                     <td>
-                      @if (activeStatement()!.status === 'DRAFT' || activeStatement()!.status === 'STALE' || activeStatement()!.status === 'CLOSED') {
-                        @if (editingItemId() === item.id) {
-                          <button mat-icon-button color="primary" (click)="$event.stopPropagation(); saveLineItem(item)" matTooltip="Lưu">
-                            <mat-icon>check</mat-icon>
-                          </button>
-                          <button mat-icon-button (click)="$event.stopPropagation(); editingItemId.set(null)" matTooltip="Hủy">
-                            <mat-icon>close</mat-icon>
-                          </button>
-                        } @else if (activeStatement()!.status !== 'CLOSED') {
-                          <button mat-icon-button (click)="$event.stopPropagation(); startEditItem(item)" matTooltip="Chỉnh giờ">
-                            <mat-icon>edit</mat-icon>
-                          </button>
-                        }
-                      }
                       <button mat-icon-button color="primary" (click)="$event.stopPropagation(); openDailyCalendar(item)"
                         matTooltip="Chi tiết theo ngày">
                         <mat-icon>calendar_view_day</mat-icon>
@@ -314,7 +286,7 @@ interface CustomerRow { id: number; name: string; statement?: Statement; }
               </tbody>
               <tfoot>
                 <tr>
-                  <td colspan="8" style="text-align:right;font-weight:700;padding:12px 16px;">TỔNG CỘNG</td>
+                  <td colspan="7" style="text-align:right;font-weight:700;padding:12px 16px;">TỔNG CỘNG</td>
                   <td style="font-weight:700;color:#1565c0;font-size:15px;text-align:right;padding:12px 16px;">
                     {{ activeStatement()!.totalAmount | number:'1.0-0' }}
                   </td>
@@ -363,7 +335,9 @@ interface CustomerRow { id: number; name: string; statement?: Statement; }
                 <div style="font-size:20px;font-weight:700;color:#1565c0;">
                   {{ getAdjHours(activeLineItem()!) | number:'1.1-1' }}h
                 </div>
-                <div style="font-size:11px;color:#9ca3af;">= {{ activeLineItem()?.adjustedDays | number:'1.1-2' }} ngày</div>
+                <div style="font-size:11px;color:#9ca3af;">
+                  = {{ lineItemDisplayValue(activeLineItem()!) | number:'1.1-2' }} {{ lineItemUnitLabel(activeLineItem()!) }}
+                </div>
               </div>
             </div>
           </mat-card-content>
@@ -841,7 +815,6 @@ export class CustomerStatementComponent implements OnInit {
   readonly dailyCalendar = signal<StatementDailyEntry[]>([]);
   readonly editingDate = signal<string | null>(null);
   readonly editingNoteDate = signal<string | null>(null);
-  readonly editingItemId = signal<number | null>(null);
   readonly showHistory = signal(false);
   readonly history = signal<StatementHistory[]>([]);
   readonly historyLoading = signal(false);
@@ -878,9 +851,6 @@ export class CustomerStatementComponent implements OnInit {
   // Day-level editing
   editDayHours = 0;
   editDayNote = '';
-  // Line item editing
-  editHours = 0;
-  editNote = '';
 
   ngOnInit() { this.load(); }
 
@@ -914,11 +884,11 @@ export class CustomerStatementComponent implements OnInit {
   }
 
   generateStatement(c: CustomerRow) {
-    // Pre-check FE (guard UX) — BE cũng đã enforce qua assertAccountantConfirmed
+    // Pre-check FE (guard UX) — BE cũng đã enforce timesheet phải được khóa.
     const lock = this.timesheetLock();
-    if (!lock?.accountantConfirmed) {
+    if (!lock?.locked) {
       this.snackBar.open(
-        'Timesheet tháng ' + this.selectedMonth + ' chưa được Kế toán xác nhận. Vui lòng xác nhận timesheet trước.',
+        'Timesheet tháng ' + this.selectedMonth + ' chưa được HR khóa. Vui lòng khóa timesheet trước.',
         'X', { duration: 5000 }
       );
       return;
@@ -954,34 +924,6 @@ export class CustomerStatementComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => this.loading.set(false)
-    });
-  }
-
-  // ── Line item hours editing ────────────────────────────────────────────────
-
-  startEditItem(item: StatementLineItem) {
-    this.editingItemId.set(item.id);
-    this.editHours = this.getAdjHours(item);
-    this.editNote = item.note || '';
-  }
-
-  saveLineItem(item: StatementLineItem) {
-    const c = this.activeCustomer()!;
-    this.statementSvc.updateLineItem(c.id, this.selectedMonth, item.id, {
-      adjustedHours: this.editHours,
-      note: this.editNote
-    }).subscribe({
-      next: updated => {
-        this.activeStatement.update(s => s ? {
-          ...s,
-          lineItems: s.lineItems.map(li => li.id === updated.id ? updated : li),
-          totalAmount: s.lineItems.reduce((sum, li) =>
-            sum + (li.id === updated.id ? updated.adjustedAmount : li.adjustedAmount), 0)
-        } : s);
-        this.editingItemId.set(null);
-        this.snackBar.open('Đã lưu điều chỉnh giờ', 'OK', { duration: 2000 });
-      },
-      error: () => this.snackBar.open('Lỗi lưu', 'X', { duration: 3000 })
     });
   }
 
@@ -1221,6 +1163,16 @@ export class CustomerStatementComponent implements OnInit {
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+
+  /** Giá trị hiển thị: giờ (HOURLY) hoặc ngày (DAILY/MONTHLY) */
+  lineItemDisplayValue(item: StatementLineItem): number {
+    return item.priceUnit === 'HOURLY'
+      ? (item.adjustedHours ?? item.adjustedDays * (item.hoursPerDay || 8))
+      : item.adjustedDays;
+  }
+  lineItemUnitLabel(item: StatementLineItem): string {
+    return item.priceUnit === 'HOURLY' ? 'giờ' : 'ngày';
+  }
 
   getAdjHours(item: StatementLineItem): number {
     return item.adjustedHours ?? (item.adjustedDays * (item.hoursPerDay || 8));

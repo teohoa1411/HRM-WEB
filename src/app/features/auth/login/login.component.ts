@@ -2,10 +2,6 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -14,361 +10,493 @@ import { AuthService } from '../../../core/auth/auth.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    CommonModule, ReactiveFormsModule,
-    MatIconModule, MatProgressSpinnerModule
-  ],
+  imports: [CommonModule, ReactiveFormsModule, MatIconModule, MatProgressSpinnerModule],
   template: `
-<div class="lp">
+<div class="page">
 
-  <!-- ═══ LEFT — Brand panel ═══ -->
-  <div class="lp-brand">
-    <div class="lp-brand-inner">
+  <!-- ═══ LEFT — Brand ═══ -->
+  <div class="brand">
+    <div class="brand-inner">
 
-      <!-- Logo -->
-      <div class="lp-logo">
-        <div class="lp-logo-icon">
+      <div class="brand-logo">
+        <div class="brand-logo-icon">
           <mat-icon>corporate_fare</mat-icon>
         </div>
-        <span class="lp-logo-text">HRMS</span>
+        <span class="brand-name">HRMS</span>
       </div>
 
-      <!-- Headline -->
-      <h2 class="lp-headline">
-        Quản lý nhân sự<br>
-        <span class="lp-headline-accent">thông minh hơn</span>
-      </h2>
-      <p class="lp-desc">
-        Nền tảng quản lý toàn diện — chấm công, lịch làm việc, nghỉ phép và báo cáo chi phí chỉ trong một nơi.
-      </p>
+      <div class="brand-copy">
+        <h2 class="brand-headline">Quản lý nhân sự<br><span class="brand-accent">thông minh hơn</span></h2>
+        <p class="brand-desc">Nền tảng quản lý toàn diện — chấm công, lịch làm việc, nghỉ phép và báo cáo chi phí trong một nơi duy nhất.</p>
+      </div>
 
-      <!-- Features -->
-      <div class="lp-features">
-        <div class="lp-feat">
-          <div class="lp-feat-icon"><mat-icon>schedule</mat-icon></div>
-          <div>
-            <div class="lp-feat-title">Timesheet thông minh</div>
-            <div class="lp-feat-sub">Log giờ theo project, tính OT tự động</div>
+      <div class="features">
+        <div class="feat">
+          <div class="feat-icon"><mat-icon>schedule</mat-icon></div>
+          <div class="feat-text">
+            <div class="feat-title">Timesheet thông minh</div>
+            <div class="feat-sub">Log giờ theo dự án, tính OT tự động</div>
           </div>
         </div>
-        <div class="lp-feat">
-          <div class="lp-feat-icon"><mat-icon>calendar_month</mat-icon></div>
-          <div>
-            <div class="lp-feat-title">Lịch làm việc linh hoạt</div>
-            <div class="lp-feat-sub">Ngày lễ, nửa ngày, tính công chính xác</div>
+        <div class="feat">
+          <div class="feat-icon"><mat-icon>event_available</mat-icon></div>
+          <div class="feat-text">
+            <div class="feat-title">Quản lý nghỉ phép</div>
+            <div class="feat-sub">Theo dõi quota, phê duyệt trực tuyến</div>
           </div>
         </div>
-        <div class="lp-feat">
-          <div class="lp-feat-icon"><mat-icon>bar_chart</mat-icon></div>
-          <div>
-            <div class="lp-feat-title">Báo cáo chi phí & doanh thu</div>
-            <div class="lp-feat-sub">Phân tích theo phòng ban, khách hàng</div>
+        <div class="feat">
+          <div class="feat-icon"><mat-icon>analytics</mat-icon></div>
+          <div class="feat-text">
+            <div class="feat-title">Báo cáo & biên bản</div>
+            <div class="feat-sub">Phân tích doanh thu, chi phí theo tháng</div>
           </div>
         </div>
       </div>
 
     </div>
 
-    <!-- Decorative circles -->
-    <div class="lp-deco lp-deco--1"></div>
-    <div class="lp-deco lp-deco--2"></div>
-    <div class="lp-deco lp-deco--3"></div>
+    <!-- decorative blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
   </div>
 
-  <!-- ═══ RIGHT — Form panel ═══ -->
-  <div class="lp-form-panel">
-    <div class="lp-form-wrap">
+  <!-- ═══ RIGHT — Form ═══ -->
+  <div class="panel">
+    <div class="panel-inner">
 
-      <!-- Mobile logo -->
-      <div class="lp-mobile-logo">
-        <div class="lp-logo-icon sm"><mat-icon>corporate_fare</mat-icon></div>
-        <span class="lp-logo-text dark">HRMS</span>
+      <!-- mobile logo -->
+      <div class="mobile-logo">
+        <div class="brand-logo-icon sm"><mat-icon>corporate_fare</mat-icon></div>
+        <span class="brand-name dark">HRMS</span>
       </div>
 
-      <div class="lp-form-header">
-        <h1 class="lp-form-title">Đăng nhập</h1>
-        <p class="lp-form-sub">Nhập thông tin tài khoản để tiếp tục</p>
+      <div class="form-head">
+        <div class="form-eyebrow">Chào mừng trở lại</div>
+        <h1 class="form-title">Đăng nhập</h1>
+        <p class="form-sub">Nhập thông tin tài khoản để tiếp tục</p>
       </div>
 
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" autocomplete="off">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" autocomplete="off" class="login-form">
 
         <!-- Username -->
-        <div class="lp-field">
-          <label class="lp-label">Tên đăng nhập</label>
-          <div class="lp-input-wrap" [class.lp-input--error]="form.get('username')?.invalid && form.get('username')?.touched">
-            <mat-icon class="lp-input-icon">person_outline</mat-icon>
-            <input class="lp-input" formControlName="username"
-                   placeholder="Nhập tên đăng nhập"
-                   autocomplete="username" spellcheck="false">
+        <div class="field">
+          <label class="field-label">Tên đăng nhập</label>
+          <div class="input-box" [class.input-box--err]="form.get('username')?.invalid && form.get('username')?.touched">
+            <mat-icon class="input-ico">person_outline</mat-icon>
+            <input class="inp" formControlName="username"
+              placeholder="Nhập tên đăng nhập"
+              autocomplete="username" spellcheck="false">
           </div>
           @if (form.get('username')?.hasError('required') && form.get('username')?.touched) {
-            <span class="lp-field-err">Vui lòng nhập tên đăng nhập</span>
+            <span class="field-err">Vui lòng nhập tên đăng nhập</span>
           }
         </div>
 
         <!-- Password -->
-        <div class="lp-field">
-          <label class="lp-label">Mật khẩu</label>
-          <div class="lp-input-wrap" [class.lp-input--error]="form.get('password')?.invalid && form.get('password')?.touched">
-            <mat-icon class="lp-input-icon">lock_outline</mat-icon>
-            <input class="lp-input" [type]="showPassword() ? 'text' : 'password'"
-                   formControlName="password"
-                   placeholder="Nhập mật khẩu"
-                   autocomplete="current-password">
-            <button type="button" class="lp-eye-btn" (click)="showPassword.set(!showPassword())" tabindex="-1">
-              <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        <div class="field">
+          <label class="field-label">Mật khẩu</label>
+          <div class="input-box" [class.input-box--err]="form.get('password')?.invalid && form.get('password')?.touched">
+            <mat-icon class="input-ico">lock_outline</mat-icon>
+            <input class="inp" [type]="showPwd() ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Nhập mật khẩu"
+              autocomplete="current-password">
+            <button type="button" class="eye-btn" (click)="showPwd.set(!showPwd())" tabindex="-1">
+              <mat-icon>{{ showPwd() ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
           </div>
           @if (form.get('password')?.hasError('required') && form.get('password')?.touched) {
-            <span class="lp-field-err">Vui lòng nhập mật khẩu</span>
+            <span class="field-err">Vui lòng nhập mật khẩu</span>
           }
         </div>
 
-        <!-- Error -->
-        @if (errorMessage()) {
-          <div class="lp-error-box">
+        <!-- Server error -->
+        @if (errorMsg()) {
+          <div class="err-box">
             <mat-icon>error_outline</mat-icon>
-            <span>{{ errorMessage() }}</span>
+            <span>{{ errorMsg() }}</span>
           </div>
         }
 
         <!-- Submit -->
-        <button type="submit" class="lp-submit" [class.lp-submit--loading]="loading()" [disabled]="loading()">
+        <button type="submit" class="btn-submit" [disabled]="loading()">
           @if (loading()) {
-            <mat-spinner diameter="18" class="lp-spinner"></mat-spinner>
+            <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
             <span>Đang đăng nhập…</span>
           } @else {
             <span>Đăng nhập</span>
-            <mat-icon class="lp-arrow">arrow_forward</mat-icon>
+            <mat-icon class="btn-arrow">arrow_forward</mat-icon>
           }
         </button>
 
       </form>
 
-      <p class="lp-hint">© 2026 HRMS · Human Resource Management System</p>
+      <p class="footer-hint">© 2026 HRMS · Human Resource Management System</p>
     </div>
   </div>
 
 </div>
   `,
   styles: [`
-    /* ════ Layout ════ */
-    .lp {
-      display: flex; min-height: 100vh;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    :host {
+      font-family: 'Be Vietnam Pro', 'Segoe UI', Tahoma, Arial, sans-serif;
     }
 
-    /* ════ LEFT BRAND PANEL ════ */
-    .lp-brand {
-      flex: 0 0 46%;
-      background: linear-gradient(145deg, #1E1B4B 0%, #312E81 40%, #4C1D95 100%);
-      display: flex; align-items: center; justify-content: center;
-      padding: 48px 56px;
-      position: relative; overflow: hidden;
+    /* ══ PAGE SHELL ════════════════════════════════════════ */
+    .page {
+      display: flex;
+      min-height: 100vh;
+      font-family: 'Be Vietnam Pro', 'Segoe UI', Tahoma, Arial, sans-serif;
     }
-    .lp-brand-inner { position: relative; z-index: 2; max-width: 380px; }
+
+    /* ══ BRAND (LEFT) ══════════════════════════════════════ */
+    .brand {
+      flex: 0 0 48%;
+      background: linear-gradient(150deg, #0F172A 0%, #1E3A5F 45%, #1E293B 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 56px 60px;
+    }
+
+    .brand-inner {
+      position: relative;
+      z-index: 2;
+      max-width: 400px;
+      width: 100%;
+    }
 
     /* Logo */
-    .lp-logo {
-      display: flex; align-items: center; gap: 12px;
-      margin-bottom: 48px;
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      margin-bottom: 52px;
     }
-    .lp-logo-icon {
-      width: 46px; height: 46px;
-      background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.25);
-      border-radius: 13px;
+    .brand-logo-icon {
+      width: 48px; height: 48px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 14px;
       display: flex; align-items: center; justify-content: center;
-      backdrop-filter: blur(6px);
+      backdrop-filter: blur(8px);
       mat-icon { color: #fff; font-size: 26px; width: 26px; height: 26px; }
-      &.sm { width: 36px; height: 36px; border-radius: 10px;
+      &.sm {
+        width: 38px; height: 38px; border-radius: 11px;
         mat-icon { font-size: 20px; width: 20px; height: 20px; }
       }
     }
-    .lp-logo-text {
-      font-size: 22px; font-weight: 900; color: #fff;
-      letter-spacing: 1.5px;
-      &.dark { color: #1E1B4B; }
+    .brand-name {
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 2.5px;
+      font-family: 'Be Vietnam Pro', sans-serif;
+      &.dark { color: #1E293B; }
     }
 
     /* Headline */
-    .lp-headline {
-      font-size: 36px; font-weight: 800; color: #fff;
-      line-height: 1.2; margin: 0 0 18px;
-      letter-spacing: -0.8px;
+    .brand-copy { margin-bottom: 44px; }
+    .brand-headline {
+      font-size: 38px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.22;
+      margin: 0 0 16px;
+      letter-spacing: -0.5px;
+      font-family: 'Be Vietnam Pro', sans-serif;
     }
-    .lp-headline-accent {
-      background: linear-gradient(90deg, #A78BFA, #60A5FA);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    .brand-accent {
+      background: linear-gradient(90deg, #60A5FA 0%, #A78BFA 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .lp-desc {
-      font-size: 14.5px; color: rgba(255,255,255,0.65);
-      line-height: 1.7; margin: 0 0 40px; font-weight: 400;
+    .brand-desc {
+      font-size: 14.5px;
+      color: rgba(255,255,255,0.58);
+      line-height: 1.75;
+      margin: 0;
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-weight: 400;
     }
 
     /* Features */
-    .lp-features { display: flex; flex-direction: column; gap: 20px; }
-    .lp-feat {
-      display: flex; align-items: flex-start; gap: 14px;
-    }
-    .lp-feat-icon {
-      width: 38px; height: 38px; flex-shrink: 0;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 10px;
+    .features { display: flex; flex-direction: column; gap: 22px; }
+    .feat { display: flex; align-items: flex-start; gap: 14px; }
+    .feat-icon {
+      width: 40px; height: 40px; flex-shrink: 0;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 11px;
       display: flex; align-items: center; justify-content: center;
-      mat-icon { font-size: 20px; width: 20px; height: 20px; color: #A78BFA; }
+      mat-icon { font-size: 20px; width: 20px; height: 20px; color: #60A5FA; }
     }
-    .lp-feat-title { font-size: 13.5px; font-weight: 700; color: #fff; line-height: 1.3; }
-    .lp-feat-sub { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 2px; line-height: 1.4; }
-
-    /* Decorative circles */
-    .lp-deco {
-      position: absolute; border-radius: 50%;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.07);
+    .feat-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.92);
+      line-height: 1.3;
+      font-family: 'Be Vietnam Pro', sans-serif;
     }
-    .lp-deco--1 { width: 380px; height: 380px; top: -100px; right: -120px; }
-    .lp-deco--2 { width: 260px; height: 260px; bottom: -60px; left: -80px; }
-    .lp-deco--3 { width: 160px; height: 160px; bottom: 120px; right: 40px; }
+    .feat-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.45);
+      margin-top: 3px;
+      line-height: 1.45;
+      font-family: 'Be Vietnam Pro', sans-serif;
+    }
 
-    /* ════ RIGHT FORM PANEL ════ */
-    .lp-form-panel {
+    /* Decorative blobs */
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(1px);
+    }
+    .blob-1 {
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, rgba(96,165,250,0.08) 0%, transparent 70%);
+      top: -140px; right: -140px;
+    }
+    .blob-2 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(167,139,250,0.07) 0%, transparent 70%);
+      bottom: -80px; left: -80px;
+    }
+    .blob-3 {
+      width: 180px; height: 180px;
+      background: radial-gradient(circle, rgba(96,165,250,0.05) 0%, transparent 70%);
+      bottom: 140px; right: 60px;
+    }
+
+    /* ══ FORM PANEL (RIGHT) ════════════════════════════════ */
+    .panel {
       flex: 1;
-      background: #FAFBFF;
-      display: flex; align-items: center; justify-content: center;
-      padding: 40px 32px;
+      background: #F8FAFC;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 40px;
     }
-    .lp-form-wrap { width: 100%; max-width: 400px; }
+    .panel-inner {
+      width: 100%;
+      max-width: 420px;
+    }
 
-    /* Mobile logo (hidden on desktop) */
-    .lp-mobile-logo {
+    /* Mobile logo */
+    .mobile-logo {
       display: none;
-      align-items: center; gap: 10px;
-      margin-bottom: 36px;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 40px;
     }
 
     /* Form header */
-    .lp-form-header { margin-bottom: 32px; }
-    .lp-form-title {
-      font-size: 28px; font-weight: 800; color: #0F172A;
-      margin: 0 0 6px; letter-spacing: -0.6px;
+    .form-head { margin-bottom: 36px; }
+    .form-eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #6366F1;
+      margin-bottom: 8px;
+      font-family: 'Be Vietnam Pro', sans-serif;
     }
-    .lp-form-sub { font-size: 14px; color: #64748B; margin: 0; font-weight: 400; }
+    .form-title {
+      font-size: 30px;
+      font-weight: 800;
+      color: #0F172A;
+      margin: 0 0 8px;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+      font-family: 'Be Vietnam Pro', sans-serif;
+    }
+    .form-sub {
+      font-size: 14px;
+      color: #64748B;
+      margin: 0;
+      font-weight: 400;
+      font-family: 'Be Vietnam Pro', sans-serif;
+    }
 
-    /* Field */
-    .lp-field { margin-bottom: 20px; }
-    .lp-label {
-      display: block; font-size: 13px; font-weight: 600;
-      color: #374151; margin-bottom: 7px; letter-spacing: 0.1px;
+    /* ══ LOGIN FORM ════════════════════════════════════════ */
+    .login-form { display: flex; flex-direction: column; gap: 0; }
+
+    .field { margin-bottom: 22px; }
+
+    .field-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1E293B;
+      margin-bottom: 8px;
+      letter-spacing: 0.1px;
+      font-family: 'Be Vietnam Pro', sans-serif;
     }
-    .lp-input-wrap {
-      display: flex; align-items: center;
+
+    .input-box {
+      display: flex;
+      align-items: center;
       background: #fff;
       border: 1.5px solid #E2E8F0;
-      border-radius: 11px;
+      border-radius: 12px;
       padding: 0 14px;
-      transition: border-color 0.15s, box-shadow 0.15s;
+      transition: border-color 0.18s, box-shadow 0.18s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
       &:focus-within {
         border-color: #6366F1;
-        box-shadow: 0 0 0 4px rgba(99,102,241,0.12);
+        box-shadow: 0 0 0 4px rgba(99,102,241,0.1), 0 1px 3px rgba(0,0,0,0.04);
       }
-      &.lp-input--error { border-color: #EF4444;
-        &:focus-within { box-shadow: 0 0 0 4px rgba(239,68,68,0.1); }
+      &.input-box--err {
+        border-color: #F87171;
+        &:focus-within { box-shadow: 0 0 0 4px rgba(248,113,113,0.12); }
       }
     }
-    .lp-input-icon {
+    .input-ico {
       font-size: 18px; width: 18px; height: 18px;
-      color: #94A3B8; flex-shrink: 0; margin-right: 10px;
+      color: #94A3B8;
+      flex-shrink: 0;
+      margin-right: 10px;
     }
-    .lp-input {
-      flex: 1; border: none; outline: none; background: transparent;
-      font-size: 14.5px; color: #0F172A; font-weight: 500;
-      padding: 13px 0; font-family: inherit;
-      &::placeholder { color: #CBD5E1; font-weight: 400; }
+    .inp {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 14.5px;
+      color: #0F172A;
+      font-weight: 500;
+      padding: 13px 0;
+      font-family: 'Be Vietnam Pro', sans-serif;
+      &::placeholder {
+        color: #CBD5E1;
+        font-weight: 400;
+      }
     }
-    .lp-eye-btn {
-      background: none; border: none; cursor: pointer; padding: 0 0 0 8px;
-      display: flex; align-items: center; color: #94A3B8; transition: color 0.12s;
+    .eye-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0 0 0 8px;
+      display: flex;
+      align-items: center;
+      color: #94A3B8;
+      transition: color 0.14s;
       mat-icon { font-size: 18px; width: 18px; height: 18px; }
       &:hover { color: #6366F1; }
     }
-    .lp-field-err {
-      display: block; font-size: 12px; color: #EF4444;
-      margin-top: 5px; font-weight: 500;
+    .field-err {
+      display: block;
+      font-size: 12px;
+      color: #EF4444;
+      margin-top: 6px;
+      font-weight: 500;
+      font-family: 'Be Vietnam Pro', sans-serif;
     }
 
     /* Error box */
-    .lp-error-box {
-      display: flex; align-items: center; gap: 9px;
-      background: #FFF1F2; color: #BE123C;
-      border: 1px solid #FECDD3;
-      padding: 11px 14px; border-radius: 10px;
-      font-size: 13.5px; font-weight: 500;
-      margin-bottom: 18px;
+    .err-box {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: #FFF1F2;
+      color: #BE123C;
+      border: 1.5px solid #FECDD3;
+      padding: 12px 16px;
+      border-radius: 11px;
+      font-size: 13.5px;
+      font-weight: 500;
+      margin-bottom: 20px;
+      font-family: 'Be Vietnam Pro', sans-serif;
       mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
     }
 
-    /* Submit button */
-    .lp-submit {
-      width: 100%; height: 50px;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
+    /* Submit */
+    .btn-submit {
+      width: 100%;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
       background: linear-gradient(135deg, #6366F1 0%, #7C3AED 100%);
-      border: none; border-radius: 12px;
-      color: #fff; font-size: 15px; font-weight: 700;
-      cursor: pointer; transition: all 0.18s;
-      box-shadow: 0 4px 14px rgba(99,102,241,0.4);
-      font-family: inherit; letter-spacing: 0.1px;
-      margin-top: 4px;
+      border: none;
+      border-radius: 13px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s;
+      box-shadow: 0 4px 16px rgba(99,102,241,0.38);
+      font-family: 'Be Vietnam Pro', sans-serif;
+      letter-spacing: 0.2px;
+      margin-top: 6px;
       &:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(99,102,241,0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(99,102,241,0.48);
       }
-      &:active:not(:disabled) { transform: translateY(0); }
-      &:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
-      &.lp-submit--loading { opacity: 0.85; }
+      &:active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+      }
+      &:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
     }
-    .lp-arrow { font-size: 18px; width: 18px; height: 18px; transition: transform 0.15s;
-      .lp-submit:hover & { transform: translateX(3px); }
+    .btn-arrow {
+      font-size: 18px; width: 18px; height: 18px;
+      transition: transform 0.18s;
+      .btn-submit:hover & { transform: translateX(4px); }
     }
-    .lp-spinner { display: inline-block; }
-    ::ng-deep .lp-spinner circle { stroke: rgba(255,255,255,0.9) !important; }
+    .btn-spinner { display: inline-block; }
+    ::ng-deep .btn-spinner circle { stroke: rgba(255,255,255,0.9) !important; }
 
-    /* Hint */
-    .lp-hint {
-      text-align: center; font-size: 11.5px; color: #94A3B8;
-      margin: 28px 0 0; font-weight: 400;
+    /* Footer */
+    .footer-hint {
+      text-align: center;
+      font-size: 12px;
+      color: #94A3B8;
+      margin: 32px 0 0;
+      font-weight: 400;
+      font-family: 'Be Vietnam Pro', sans-serif;
     }
 
-    /* ════ Responsive ════ */
-    @media (max-width: 768px) {
-      .lp { flex-direction: column; }
-      .lp-brand { display: none; }
-      .lp-form-panel { padding: 36px 24px; align-items: flex-start; padding-top: 60px; }
-      .lp-mobile-logo { display: flex; }
+    /* ══ RESPONSIVE ════════════════════════════════════════ */
+    @media (max-width: 860px) {
+      .brand { flex: 0 0 42%; padding: 40px 40px; }
+      .brand-headline { font-size: 30px; }
+    }
+
+    @media (max-width: 680px) {
+      .page { flex-direction: column; }
+      .brand { display: none; }
+      .panel { padding: 48px 24px; align-items: flex-start; }
+      .mobile-logo { display: flex; }
+      .panel-inner { max-width: 100%; }
     }
   `]
 })
 export class LoginComponent {
-  private fb = inject(FormBuilder);
+  private fb          = inject(FormBuilder);
   private authService = inject(AuthService);
-  private router = inject(Router);
-  private snackBar = inject(MatSnackBar);
+  private router      = inject(Router);
+  private snackBar    = inject(MatSnackBar);
 
   readonly form = this.fb.group({
     username: ['', Validators.required],
     password: ['', Validators.required]
   });
 
-  readonly loading = signal(false);
-  readonly showPassword = signal(false);
-  readonly errorMessage = signal<string | null>(null);
+  readonly loading  = signal(false);
+  readonly showPwd  = signal(false);
+  readonly errorMsg = signal<string | null>(null);
 
   onSubmit() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.loading.set(true);
-    this.errorMessage.set(null);
+    this.errorMsg.set(null);
 
     this.authService.login(this.form.getRawValue() as any).subscribe({
       next: () => {
@@ -381,8 +509,7 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading.set(false);
-        const msg = err?.error?.message ?? 'Invalid username or password';
-        this.errorMessage.set(msg);
+        this.errorMsg.set(err?.error?.message ?? 'Tên đăng nhập hoặc mật khẩu không đúng');
       }
     });
   }

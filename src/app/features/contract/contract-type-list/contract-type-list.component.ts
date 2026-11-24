@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -17,6 +17,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ContractService } from '../../../core/services/contract.service';
 import { ContractType, ContractTypeRequest } from '../../../core/models/contract.models';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-contract-type-list',
@@ -33,7 +34,7 @@ import { ContractType, ContractTypeRequest } from '../../../core/models/contract
           <div class="page-title">Danh mục loại hợp đồng & biên bản</div>
           <div class="page-subtitle">{{ filteredTypes().length }} loại</div>
         </div>
-        <button mat-raised-button color="primary" (click)="openCreateDialog()">
+        <button mat-raised-button color="primary" (click)="openCreateDialog()" *ngIf="isStrictAdmin()">
           <mat-icon>add</mat-icon> Thêm loại
         </button>
       </div>
@@ -112,7 +113,13 @@ import { ContractType, ContractTypeRequest } from '../../../core/models/contract
             <ng-container matColumnDef="active">
               <th mat-header-cell *matHeaderCellDef>Hoạt động</th>
               <td mat-cell *matCellDef="let t">
-                <mat-slide-toggle [checked]="t.active" (change)="toggleActive(t)"></mat-slide-toggle>
+                @if (isStrictAdmin()) {
+                  <mat-slide-toggle [checked]="t.active" (change)="toggleActive(t)"></mat-slide-toggle>
+                } @else {
+                  <span [style.color]="t.active ? '#16a34a' : '#9ca3af'" style="font-size:12px;font-weight:600;">
+                    {{ t.active ? 'Hoạt động' : 'Tắt' }}
+                  </span>
+                }
               </td>
             </ng-container>
 
@@ -120,17 +127,19 @@ import { ContractType, ContractTypeRequest } from '../../../core/models/contract
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef></th>
               <td mat-cell *matCellDef="let t">
-                <button mat-icon-button [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()">
-                  <mat-icon>more_vert</mat-icon>
-                </button>
-                <mat-menu #menu="matMenu">
-                  <button mat-menu-item (click)="openEditDialog(t)">
-                    <mat-icon>edit</mat-icon> Chỉnh sửa
+                @if (isStrictAdmin()) {
+                  <button mat-icon-button [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()">
+                    <mat-icon>more_vert</mat-icon>
                   </button>
-                  <button mat-menu-item style="color:#c62828;" (click)="delete(t)">
-                    <mat-icon color="warn">delete</mat-icon> Xóa
-                  </button>
-                </mat-menu>
+                  <mat-menu #menu="matMenu">
+                    <button mat-menu-item (click)="openEditDialog(t)">
+                      <mat-icon>edit</mat-icon> Chỉnh sửa
+                    </button>
+                    <button mat-menu-item style="color:#c62828;" (click)="delete(t)">
+                      <mat-icon color="warn">delete</mat-icon> Xóa
+                    </button>
+                  </mat-menu>
+                }
               </td>
             </ng-container>
 
@@ -213,6 +222,8 @@ export class ContractTypeListComponent implements OnInit {
   private contractService = inject(ContractService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private authService = inject(AuthService);
+  readonly isStrictAdmin = computed(() => this.authService.isStrictAdmin());
 
   readonly columns = ['code', 'name', 'category', 'hasExpiry', 'reminderDaysBefore', 'active', 'actions'];
   readonly types = signal<ContractType[]>([]);

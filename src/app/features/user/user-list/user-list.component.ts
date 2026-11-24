@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { UserService } from '../../../core/services/user.service';
 import { User, UserRole, ROLE_LABELS, CreateUserRequest } from '../../../core/models/user.models';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-user-list',
@@ -153,22 +154,24 @@ import { User, UserRole, ROLE_LABELS, CreateUserRequest } from '../../../core/mo
                   <mat-icon>more_vert</mat-icon>
                 </button>
                 <mat-menu #menu="matMenu">
-                  <button
-                    mat-menu-item
-                    (click)="toggleStatus(user)"
-                    class="menu-item"
-                  >
-                    <mat-icon>{{ user.active ? 'lock' : 'lock_open' }}</mat-icon>
-                    <span>{{ user.active ? 'Tắt tài khoản' : 'Bật tài khoản' }}</span>
-                  </button>
-                  <button
-                    mat-menu-item
-                    (click)="changeRole(user)"
-                    class="menu-item"
-                  >
-                    <mat-icon>security</mat-icon>
-                    <span>Đổi quyền hạn</span>
-                  </button>
+                  @if (isStrictAdmin()) {
+                    <button
+                      mat-menu-item
+                      (click)="toggleStatus(user)"
+                      class="menu-item"
+                    >
+                      <mat-icon>{{ user.active ? 'lock' : 'lock_open' }}</mat-icon>
+                      <span>{{ user.active ? 'Tắt tài khoản' : 'Bật tài khoản' }}</span>
+                    </button>
+                    <button
+                      mat-menu-item
+                      (click)="changeRole(user)"
+                      class="menu-item"
+                    >
+                      <mat-icon>security</mat-icon>
+                      <span>Đổi quyền hạn</span>
+                    </button>
+                  }
                   <button
                     mat-menu-item
                     (click)="resetPassword(user)"
@@ -186,15 +189,17 @@ import { User, UserRole, ROLE_LABELS, CreateUserRequest } from '../../../core/mo
                     <mat-icon>lock_open</mat-icon>
                     <span>Unlock tài khoản</span>
                   </button>
-                  <mat-divider></mat-divider>
-                  <button
-                    mat-menu-item
-                    (click)="deleteUser(user)"
-                    class="menu-item menu-item-danger"
-                  >
-                    <mat-icon>delete</mat-icon>
-                    <span>Xóa tài khoản</span>
-                  </button>
+                  @if (isStrictAdmin()) {
+                    <mat-divider></mat-divider>
+                    <button
+                      mat-menu-item
+                      (click)="deleteUser(user)"
+                      class="menu-item menu-item-danger"
+                    >
+                      <mat-icon>delete</mat-icon>
+                      <span>Xóa tài khoản</span>
+                    </button>
+                  }
                 </mat-menu>
               </td>
             </tr>
@@ -890,6 +895,8 @@ export class UserListComponent implements OnInit {
   private userService = inject(UserService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  readonly authService = inject(AuthService);
+  readonly isStrictAdmin = computed(() => this.authService.isStrictAdmin());
 
   users = signal<User[]>([]);
   isLoading = signal(false);

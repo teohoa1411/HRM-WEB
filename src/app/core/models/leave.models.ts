@@ -85,3 +85,7 @@ export interface GrantLeaveBalanceRequest {
   year: number;
   totalQuota: number;
 }
+
+export interface AdjustLeaveBalanceRequest {
+  delta: number; // positive = cộng, negative = trừ
+}

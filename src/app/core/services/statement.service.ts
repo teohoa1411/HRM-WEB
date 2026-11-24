@@ -33,6 +33,8 @@ export interface StatementLineItem {
   adjustedHours: number;
   /** Số giờ / ngày (mặc định 8.0) */
   hoursPerDay: number;
+  /** Đơn vị tính: HOURLY | DAILY | MONTHLY */
+  priceUnit: string;
   unitSellPrice: number;
   originalAmount: number;
   adjustedAmount: number;
@@ -109,11 +111,6 @@ export class StatementService {
 
   generateCustomerStatement(customerId: number, yearMonth: string): Observable<Statement> {
     return this.http.post<any>(`${this.api}/customer/${customerId}/${yearMonth}/generate`, {}).pipe(map(r => r.data));
-  }
-
-  updateLineItem(customerId: number, yearMonth: string, id: number,
-                 payload: { adjustedDays?: number; adjustedHours?: number; note?: string }): Observable<StatementLineItem> {
-    return this.http.put<any>(`${this.api}/customer/${customerId}/${yearMonth}/line-items/${id}`, payload).pipe(map(r => r.data));
   }
 
   exportCustomerExcel(customerId: number, yearMonth: string): Observable<Blob> {

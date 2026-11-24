@@ -195,7 +195,7 @@ interface VendorRow { id: number; name: string; statement?: Statement; }
                     <mat-icon style="font-size:16px;width:16px;height:16px;vertical-align:middle;">lock</mat-icon>
                     ĐÃ ĐÓNG
                   </span>
-                  @if (authService.isCompanyAdmin()) {
+                  @if (authService.isStrictAdmin()) {
                     <button mat-stroked-button style="color:#059669;border-color:#059669;" (click)="reopenStatement()">
                       <mat-icon>lock_open</mat-icon> Mở lại
                     </button>
@@ -274,7 +274,7 @@ interface VendorRow { id: number; name: string; statement?: Statement; }
                         }
                       }
                     </td>
-                    <td style="text-align:right;font-size:12px;color:#9ca3af;">{{ item.adjustedDays | number:'1.1-2' }}d</td>
+                    <td style="text-align:right;font-size:12px;color:#9ca3af;">{{ lineItemDisplayValue(item) | number:'1.1-2' }} {{ lineItemUnitLabel(item) }}</td>
                     <td style="text-align:right;">{{ item.unitSellPrice | number:'1.0-0' }}</td>
                     <td style="text-align:right;color:#6b7280;">{{ item.originalAmount | number:'1.0-0' }}</td>
                     <td style="text-align:right;font-weight:600;color:#dc2626;">{{ item.adjustedAmount | number:'1.0-0' }}</td>
@@ -361,7 +361,9 @@ interface VendorRow { id: number; name: string; statement?: Statement; }
                 <div style="font-size:20px;font-weight:700;color:#dc2626;">
                   {{ getAdjHours(activeLineItem()!) | number:'1.1-1' }}h
                 </div>
-                <div style="font-size:11px;color:#9ca3af;">= {{ activeLineItem()?.adjustedDays | number:'1.1-2' }} ngày</div>
+                <div style="font-size:11px;color:#9ca3af;">
+                  = {{ lineItemDisplayValue(activeLineItem()!) | number:'1.1-2' }} {{ lineItemUnitLabel(activeLineItem()!) }}
+                </div>
               </div>
             </div>
           </mat-card-content>
@@ -855,6 +857,16 @@ export class VendorStatementComponent implements OnInit {
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+
+  /** Giá trị hiển thị: giờ (HOURLY) hoặc ngày (DAILY/MONTHLY) */
+  lineItemDisplayValue(item: StatementLineItem): number {
+    return item.priceUnit === 'HOURLY'
+      ? (item.adjustedHours ?? item.adjustedDays * (item.hoursPerDay || 8))
+      : item.adjustedDays;
+  }
+  lineItemUnitLabel(item: StatementLineItem): string {
+    return item.priceUnit === 'HOURLY' ? 'giờ' : 'ngày';
+  }
 
   getAdjHours(item: StatementLineItem): number {
     return item.adjustedHours ?? (item.adjustedDays * (item.hoursPerDay || 8));

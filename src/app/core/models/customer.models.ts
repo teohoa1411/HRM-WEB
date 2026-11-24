@@ -1,4 +1,4 @@
-export type PriceUnit = 'DAILY' | 'MONTHLY';
+export type PriceUnit = 'HOURLY' | 'DAILY' | 'MONTHLY';
 
 export interface Customer {
   id: number;

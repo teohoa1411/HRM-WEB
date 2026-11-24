@@ -26,6 +26,7 @@ export interface PayrollRecord {
   daysOff: number;
   totalWorkdays: number;
   calculatedSalary: number;
+  overtimeAmount: number;
   bonus: number;
   deduction: number;
   insuranceSalary: number | null;

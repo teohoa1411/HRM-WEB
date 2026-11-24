@@ -43,7 +43,7 @@ interface StatCard { label: string; value: string | number; icon: string; color:
       </div>
 
       <!-- Alert Center Widget -->
-      @if (authService.isCompanyAdmin() && (alertCount()?.total ?? 0) > 0) {
+      @if (authService.isAdminOrManager() && (alertCount()?.total ?? 0) > 0) {
         <mat-card style="margin-top:24px; border-left:4px solid #1d4ed8;">
           <mat-card-content style="padding:16px 20px!important;">
             <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
@@ -109,7 +109,7 @@ interface StatCard { label: string; value: string | number; icon: string; color:
         </mat-card-header>
         <mat-card-content style="padding:16px 20px 20px;">
           <div class="actions-grid">
-            @if (authService.isCompanyAdmin()) {
+            @if (authService.isAdminOrManager()) {
               <a class="action-card" routerLink="/employees/new">
                 <div class="action-icon" style="background:#dbeafe;"><mat-icon style="color:#1d4ed8;">person_add</mat-icon></div>
                 <div class="action-label">Thêm Nhân viên</div>
@@ -118,10 +118,12 @@ interface StatCard { label: string; value: string | number; icon: string; color:
                 <div class="action-icon" style="background:#dcfce7;"><mat-icon style="color:#15803d;">store</mat-icon></div>
                 <div class="action-label">Thêm Vendor</div>
               </a>
-              <a class="action-card" routerLink="/financial-report">
-                <div class="action-icon" style="background:#fef3c7;"><mat-icon style="color:#d97706;">bar_chart</mat-icon></div>
-                <div class="action-label">Xem Báo cáo</div>
-              </a>
+              @if (authService.isStrictAdmin()) {
+                <a class="action-card" routerLink="/financial-report">
+                  <div class="action-icon" style="background:#fef3c7;"><mat-icon style="color:#d97706;">bar_chart</mat-icon></div>
+                  <div class="action-label">Xem Báo cáo</div>
+                </a>
+              }
               <a class="action-card" routerLink="/job-roles">
                 <div class="action-icon" style="background:#f3e8ff;"><mat-icon style="color:#7c3aed;">work</mat-icon></div>
                 <div class="action-label">Giá Job Role</div>
@@ -202,7 +204,7 @@ export class DashboardComponent implements OnInit {
   }
 
   private loadAlerts() {
-    if (this.authService.isCompanyAdmin()) {
+    if (this.authService.isAdminOrManager()) {
       this.alertService.getActive().subscribe({
         next: d => this.alerts.set(d || []),
         error: () => {}
@@ -224,14 +226,17 @@ export class DashboardComponent implements OnInit {
   }
 
   private loadStats() {
-    if (this.authService.isCompanyAdmin()) {
+    if (this.authService.isAdminOrManager()) {
       this.employeeService.list({ size: 1 }).subscribe(page => {
-        this.statCards.set([
+        const cards: StatCard[] = [
           { label: 'Total Employees', value: page.totalElements, icon: 'people', color: '#3f51b5', route: '/employees' },
           { label: 'Active Vendors', value: '—', icon: 'store', color: '#e91e63', route: '/vendors' },
-          { label: 'Job Roles', value: '—', icon: 'work', color: '#ff9800', route: '/job-roles' },
-          { label: 'Reports', value: 'View', icon: 'bar_chart', color: '#4caf50', route: '/financial-report' }
-        ]);
+          { label: 'Job Roles', value: '—', icon: 'work', color: '#ff9800', route: '/job-roles' }
+        ];
+        if (this.authService.isStrictAdmin()) {
+          cards.push({ label: 'Reports', value: 'View', icon: 'bar_chart', color: '#4caf50', route: '/financial-report' });
+        }
+        this.statCards.set(cards);
       });
     } else if (this.authService.isSuperAdmin()) {
       this.statCards.set([

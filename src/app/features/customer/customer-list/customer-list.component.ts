@@ -88,7 +88,7 @@ import { CustomerPriceDialogComponent } from '../customer-price-dialog/customer-
                 </button>
                 <mat-menu #menu="matMenu">
                   <button mat-menu-item (click)="openPriceDialog(c)">
-                    <mat-icon>attach_money</mat-icon> Cấu hình giá mua
+                    <mat-icon>attach_money</mat-icon> Cấu hình giá bán
                   </button>
                   <button mat-menu-item [routerLink]="[c.id, 'edit']">
                     <mat-icon>edit</mat-icon> Sửa
@@ -134,7 +134,7 @@ export class CustomerListComponent implements OnInit {
 
   openPriceDialog(customer: Customer) {
     const ref = this.dialog.open(CustomerPriceDialogComponent, {
-      width: '700px', data: { customer }
+      width: '820px', maxWidth: '95vw', data: { customer }, panelClass: 'no-padding-dialog'
     });
     ref.afterClosed().subscribe(() => this.load());
   }

@@ -20,6 +20,7 @@ import { EmployeeService } from '../../../core/services/employee.service';
 import { Department } from '../../../core/models/company.models';
 import { Employee } from '../../../core/models/employee.models';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { AuthService } from '../../../core/auth/auth.service';
 
 interface DepartmentRow extends Department {
   parentDeptName?: string;
@@ -68,6 +69,7 @@ interface DeptTreeNode {
             color="primary"
             class="add-button"
             (click)="openCreateForm()"
+            *ngIf="isStrictAdmin()"
           >
             <mat-icon>add</mat-icon>
             Thêm phòng ban
@@ -265,10 +267,12 @@ interface DeptTreeNode {
           <div class="empty-state">
             <mat-icon>inbox</mat-icon>
             <p>Không có phòng ban nào</p>
-            <button mat-raised-button color="primary" (click)="openCreateForm()">
-              <mat-icon>add</mat-icon>
-              Thêm phòng ban
-            </button>
+            @if (isStrictAdmin()) {
+              <button mat-raised-button color="primary" (click)="openCreateForm()">
+                <mat-icon>add</mat-icon>
+                Thêm phòng ban
+              </button>
+            }
           </div>
         } @else {
           <div class="table-wrapper">
@@ -316,33 +320,35 @@ interface DeptTreeNode {
                       </span>
                     </td>
                     <td>
-                      <button
-                        mat-icon-button
-                        [matMenuTriggerFor]="menu"
-                        class="action-menu"
-                      >
-                        <mat-icon>more_vert</mat-icon>
-                      </button>
-                      <mat-menu #menu="matMenu">
-                        <button mat-menu-item (click)="editDepartment(dept)">
-                          <mat-icon>edit</mat-icon>
-                          <span>Sửa</span>
-                        </button>
-                        <button mat-menu-item (click)="toggleDepartmentStatus(dept)">
-                          <mat-icon>
-                            {{ dept.active ? 'block' : 'check_circle' }}
-                          </mat-icon>
-                          <span>{{ dept.active ? 'Tắt' : 'Bật' }}</span>
-                        </button>
+                      @if (isStrictAdmin()) {
                         <button
-                          mat-menu-item
-                          class="delete-option"
-                          (click)="deleteDepartment(dept)"
+                          mat-icon-button
+                          [matMenuTriggerFor]="menu"
+                          class="action-menu"
                         >
-                          <mat-icon>delete</mat-icon>
-                          <span>Xóa</span>
+                          <mat-icon>more_vert</mat-icon>
                         </button>
-                      </mat-menu>
+                        <mat-menu #menu="matMenu">
+                          <button mat-menu-item (click)="editDepartment(dept)">
+                            <mat-icon>edit</mat-icon>
+                            <span>Sửa</span>
+                          </button>
+                          <button mat-menu-item (click)="toggleDepartmentStatus(dept)">
+                            <mat-icon>
+                              {{ dept.active ? 'block' : 'check_circle' }}
+                            </mat-icon>
+                            <span>{{ dept.active ? 'Tắt' : 'Bật' }}</span>
+                          </button>
+                          <button
+                            mat-menu-item
+                            class="delete-option"
+                            (click)="deleteDepartment(dept)"
+                          >
+                            <mat-icon>delete</mat-icon>
+                            <span>Xóa</span>
+                          </button>
+                        </mat-menu>
+                      }
                     </td>
                   </tr>
                 }
@@ -972,6 +978,8 @@ export class DepartmentListComponent implements OnInit {
   private employeeService = inject(EmployeeService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private authService = inject(AuthService);
+  readonly isStrictAdmin = computed(() => this.authService.isStrictAdmin());
 
   // Signals
   departments = signal<DepartmentRow[]>([]);

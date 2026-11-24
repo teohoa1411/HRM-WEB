@@ -17,6 +17,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { InsuranceService, InsurancePolicy, InsuranceDeclaration, InsuranceConfig } from '../../core/services/insurance.service';
 import { EmployeeService } from '../../core/services/employee.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { MoneyDirective } from '../../shared/directives/money.directive';
 import { Employee } from '../../core/models/employee.models';
 import { debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
@@ -271,7 +272,8 @@ import { debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
           </div>
         </mat-tab>
 
-        <!-- TAB 3: CONFIG -->
+        <!-- TAB 3: CONFIG — chỉ COMPANY_ADMIN -->
+        @if (isStrictAdmin()) {
         <mat-tab label="Cấu hình tỷ lệ">
           <div style="padding:16px 0;">
             <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
@@ -316,6 +318,7 @@ import { debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
             }
           </div>
         </mat-tab>
+        } <!-- end @if isStrictAdmin -->
       </mat-tab-group>
     </div>
   `,
@@ -341,6 +344,8 @@ import { debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
 export class InsuranceComponent implements OnInit {
   private svc = inject(InsuranceService);
   private snackBar = inject(MatSnackBar);
+  private authService = inject(AuthService);
+  readonly isStrictAdmin = computed(() => this.authService.isStrictAdmin());
 
   readonly loading = signal(false);
   readonly policies = signal<InsurancePolicy[]>([]);
@@ -400,7 +405,13 @@ export class InsuranceComponent implements OnInit {
   }
 
   createPolicy() {
-    this.svc.createPolicy(this.newPolicy).subscribe({
+    const payload = {
+      ...this.newPolicy,
+      insuranceSalary: typeof this.newPolicy.insuranceSalary === 'string'
+        ? Number(String(this.newPolicy.insuranceSalary).replace(/,/g, ''))
+        : this.newPolicy.insuranceSalary
+    };
+    this.svc.createPolicy(payload).subscribe({
       next: () => { this.showAddPolicy = false; this.loadAll(); this.snackBar.open('Đã thêm NV tham gia BH', 'OK', { duration: 3000 }); },
       error: (e) => this.snackBar.open(e.error?.message || 'Lỗi', 'X', { duration: 3000 })
     });

@@ -38,8 +38,8 @@ export class LeaveService {
   }
 
   // Create a leave request for an employee (admin)
-  createRequest(employeeId: number, dto: CreateLeaveRequest): Observable<LeaveRequest> {
-    return this.http.post<ApiResponse<LeaveRequest>>(`${this.base}/requests/employee/${employeeId}`, dto).pipe(map(r => r.data));
+  createRequest(employeePublicId: string, dto: CreateLeaveRequest): Observable<LeaveRequest> {
+    return this.http.post<ApiResponse<LeaveRequest>>(`${this.base}/requests/employee/${employeePublicId}`, dto).pipe(map(r => r.data));
   }
 
   // Employee self-service
@@ -87,14 +87,19 @@ export class LeaveService {
   }
 
   /** Lấy quota phép của một nhân sự */
-  getEmployeeLeaveBalances(employeeId: number, year?: number): Observable<LeaveBalance[]> {
+  getEmployeeLeaveBalances(employeePublicId: string, year?: number): Observable<LeaveBalance[]> {
     let p = new HttpParams();
     if (year) p = p.set('year', year);
-    return this.http.get<ApiResponse<LeaveBalance[]>>(`${this.base}/balances/employee/${employeeId}`, { params: p }).pipe(map(r => r.data));
+    return this.http.get<ApiResponse<LeaveBalance[]>>(`${this.base}/balances/employee/${employeePublicId}`, { params: p }).pipe(map(r => r.data));
   }
 
   /** Cấp quota phép cho nhân sự */
   grantLeaveBalance(req: GrantLeaveBalanceRequest): Observable<LeaveBalance> {
     return this.http.post<ApiResponse<LeaveBalance>>(`${this.base}/balances/grant`, req).pipe(map(r => r.data));
+  }
+
+  /** Điều chỉnh delta quota (cộng/trừ ngày) */
+  adjustLeaveBalance(id: number, delta: number): Observable<LeaveBalance> {
+    return this.http.patch<ApiResponse<LeaveBalance>>(`${this.base}/balances/${id}/adjust`, { delta }).pipe(map(r => r.data));
   }
 }

@@ -324,7 +324,7 @@ export class JobRoleListComponent implements OnInit {
 
   form: JobRoleForm = this.emptyForm();
 
-  readonly isAdmin = computed(() => this.authService.isCompanyAdmin());
+  readonly isAdmin = computed(() => this.authService.isStrictAdmin());
 
   readonly filteredRoles = computed(() => {
     const cat = this.selectedCategory();

@@ -78,7 +78,7 @@ export const routes: Routes = [
       },
       {
         path: 'financial-report',
-        canActivate: [roleGuard('COMPANY_ADMIN', 'MANAGER', 'ACCOUNTANT')],
+        canActivate: [roleGuard('COMPANY_ADMIN')],
         loadChildren: () => import('./features/financial-report/financial-report.routes').then(m => m.FINANCIAL_REPORT_ROUTES)
       },
       {

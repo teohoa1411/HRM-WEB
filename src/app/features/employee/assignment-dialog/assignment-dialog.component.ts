@@ -32,7 +32,7 @@ import { Customer } from '../../../core/models/customer.models';
             <div class="ad-title">Phân công dự án</div>
             <div class="ad-sub">
               <mat-icon class="ad-sub-icon">person</mat-icon>
-              {{ data.employeeName || ('Nhân sự #' + data.employeeId) }}
+              {{ data.employeeName || 'Nhân sự' }}
             </div>
           </div>
         </div>
@@ -588,7 +588,7 @@ export class AssignmentDialogComponent implements OnInit {
   private assignmentService = inject(AssignmentService);
   private customerService = inject(CustomerService);
   private snackBar = inject(MatSnackBar);
-  readonly data: { employeeId: string; employeeName?: string } = inject(MAT_DIALOG_DATA);
+  readonly data: { employeePublicId: string; employeeName?: string } = inject(MAT_DIALOG_DATA);
 
   readonly assignments      = signal<Assignment[]>([]);
   readonly customers        = signal<Customer[]>([]);
@@ -612,7 +612,7 @@ export class AssignmentDialogComponent implements OnInit {
 
   loadAssignments() {
     this.loadingAssignments.set(true);
-    this.assignmentService.getByEmployee(this.data.employeeId).subscribe({
+    this.assignmentService.getByEmployee(this.data.employeePublicId).subscribe({
       next: list => { this.assignments.set(list); this.loadingAssignments.set(false); },
       error: err => {
         this.snackBar.open(err?.error?.message || 'Lỗi khi tải danh sách phân công', 'Đóng', { duration: 3000 });
@@ -653,7 +653,7 @@ export class AssignmentDialogComponent implements OnInit {
     const v = this.form.getRawValue();
     this.saving.set(true);
 
-    this.assignmentService.create(this.data.employeeId, {
+    this.assignmentService.create(this.data.employeePublicId, {
       customerId:     v.customerId!,
       clientUsername: v.clientUsername?.trim() || undefined,
       workLocation:   v.workLocation?.trim() || undefined,

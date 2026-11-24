@@ -603,7 +603,7 @@ export class EmployeeListComponent implements OnInit {
 
   openAssignment(emp: Employee) {
     this.dialog.open(AssignmentDialogComponent, {
-      data: { employeeId: emp.id, employeeName: emp.fullName },
+      data: { employeePublicId: emp.publicId, employeeName: emp.fullName },
       width: '90vw', maxWidth: '1200px', panelClass: 'assignment-dialog-panel'
     });
   }

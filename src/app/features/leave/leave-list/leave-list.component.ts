@@ -12,6 +12,9 @@ import { MatRippleModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { LeaveService } from '../../../core/services/leave.service';
 import { LeaveRequest, LeaveType, CreateLeaveTypeRequest } from '../../../core/models/leave.models';
+import { AuthService } from '../../../core/auth/auth.service';
+import { EmployeeService } from '../../../core/services/employee.service';
+import { Employee } from '../../../core/models/employee.models';
 
 @Component({
   selector: 'app-leave-list',
@@ -100,8 +103,13 @@ import { LeaveRequest, LeaveType, CreateLeaveTypeRequest } from '../../../core/m
           <div class="create-panel-body">
             <div class="form-grid">
               <div class="form-field">
-                <label class="field-label">Mã nhân viên <span class="req-star">*</span></label>
-                <input class="field-input" type="number" [(ngModel)]="newReq.employeeId" placeholder="VD: 1">
+                <label class="field-label">Nhân sự <span class="req-star">*</span></label>
+                <select class="field-select" [(ngModel)]="newReq.employeePublicId">
+                  <option [ngValue]="null" disabled>-- Chọn nhân sự --</option>
+                  @for (employee of employees(); track employee.publicId) {
+                    <option [ngValue]="employee.publicId">{{ employee.employeeCode }} — {{ employee.fullName }}</option>
+                  }
+                </select>
               </div>
               <div class="form-field">
                 <label class="field-label">Loại nghỉ phép <span class="req-star">*</span></label>
@@ -144,7 +152,7 @@ import { LeaveRequest, LeaveType, CreateLeaveTypeRequest } from '../../../core/m
             <div class="create-panel-footer">
               <button class="btn-cancel" (click)="showCreateForm.set(false)" matRipple>Hủy</button>
               <button class="btn-submit" (click)="submitRequest()"
-                [disabled]="!newReq.employeeId || !newReq.leaveTypeId || !newReq.startDate || !newReq.endDate || submitting()"
+                [disabled]="!newReq.employeePublicId || !newReq.leaveTypeId || !newReq.startDate || !newReq.endDate || submitting()"
                 matRipple>
                 <mat-icon>send</mat-icon>
                 {{ submitting() ? 'Đang gửi...' : 'Gửi đơn' }}
@@ -301,7 +309,8 @@ import { LeaveRequest, LeaveType, CreateLeaveTypeRequest } from '../../../core/m
       @if (activeTab() === 'types') {
         <div class="tab-content">
 
-          <!-- Add type form -->
+          <!-- Add type form — chỉ COMPANY_ADMIN -->
+          @if (isStrictAdmin()) {
           <div class="type-form-card">
             <div class="type-form-title">
               <mat-icon>add_circle_outline</mat-icon>
@@ -354,6 +363,7 @@ import { LeaveRequest, LeaveType, CreateLeaveTypeRequest } from '../../../core/m
               </div>
             </div>
           </div>
+          } <!-- end @if isStrictAdmin — form thêm loại nghỉ phép -->
 
           <!-- Leave type cards grid -->
           @if (leaveTypes().length === 0) {
@@ -895,10 +905,14 @@ import { LeaveRequest, LeaveType, CreateLeaveTypeRequest } from '../../../core/m
 })
 export class LeaveListComponent implements OnInit {
   private leaveService = inject(LeaveService);
+  private employeeService = inject(EmployeeService);
   private snackBar = inject(MatSnackBar);
+  private authService = inject(AuthService);
+  readonly isStrictAdmin = computed(() => this.authService.isStrictAdmin());
 
   readonly requests    = signal<LeaveRequest[]>([]);
   readonly leaveTypes  = signal<LeaveType[]>([]);
+  readonly employees   = signal<Employee[]>([]);
   readonly submitting  = signal(false);
   readonly activeTab   = signal<'requests' | 'types'>('requests');
   readonly showCreateForm = signal(false);
@@ -921,7 +935,7 @@ export class LeaveListComponent implements OnInit {
 
   newType: CreateLeaveTypeRequest = { code: '', name: '', maxDays: 12, paid: true, autoGrantOnCreate: false, grantRounding: 'HALF_UP' };
   newReq = {
-    employeeId: null as number | null,
+    employeePublicId: null as string | null,
     leaveTypeId: null as number | null,
     startDate: '',
     endDate: '',
@@ -933,6 +947,7 @@ export class LeaveListComponent implements OnInit {
   ngOnInit() {
     this.loadRequests();
     this.loadTypes();
+    this.loadEmployees();
   }
 
   loadRequests() {
@@ -943,6 +958,13 @@ export class LeaveListComponent implements OnInit {
 
   loadTypes() {
     this.leaveService.getAllLeaveTypes().subscribe(list => this.leaveTypes.set(list));
+  }
+
+  loadEmployees() {
+    this.employeeService.list({ size: 500, sort: 'fullName' }).subscribe({
+      next: page => this.employees.set(page.content ?? []),
+      error: () => this.snackBar.open('Không thể tải danh sách nhân sự', 'Đóng', { duration: 3000 })
+    });
   }
 
   setFilter(status: string) {
@@ -990,9 +1012,9 @@ export class LeaveListComponent implements OnInit {
   }
 
   submitRequest() {
-    if (!this.newReq.employeeId || !this.newReq.leaveTypeId) return;
+    if (!this.newReq.employeePublicId || !this.newReq.leaveTypeId) return;
     this.submitting.set(true);
-    this.leaveService.createRequest(this.newReq.employeeId, {
+    this.leaveService.createRequest(this.newReq.employeePublicId, {
       leaveTypeId: this.newReq.leaveTypeId!,
       startDate: this.newReq.startDate,
       endDate: this.newReq.endDate,
@@ -1004,7 +1026,7 @@ export class LeaveListComponent implements OnInit {
         this.snackBar.open('Đã gửi đơn nghỉ phép', 'OK', { duration: 2500 });
         this.submitting.set(false);
         this.showCreateForm.set(false);
-        this.newReq = { employeeId: null, leaveTypeId: null, startDate: '', endDate: '', halfDay: false, halfDayPeriod: 'MORNING', reason: '' };
+        this.newReq = { employeePublicId: null, leaveTypeId: null, startDate: '', endDate: '', halfDay: false, halfDayPeriod: 'MORNING', reason: '' };
         this.loadRequests();
       },
       error: err => {

@@ -667,11 +667,11 @@ export class EmployeeProfileComponent implements OnInit {
     obs.subscribe({
       next: emp => {
         this.employee.set(emp);
-        this.canEdit.set(this.authService.isCompanyAdmin());
+        this.canEdit.set(this.authService.isAdminOrManager());
         this.loading.set(false);
         this.loadDocuments(emp.publicId);
         this.loadEmployeeAssets(emp.publicId);
-        if (this.authService.isCompanyAdmin() && emp.sourceType === 'INTERNAL') {
+        if (this.authService.isAdminOrManager() && emp.sourceType === 'INTERNAL') {
           this.salaryService.getHistory(emp.publicId).subscribe(list => this.salaryHistory.set(list));
         }
       },
@@ -695,7 +695,7 @@ export class EmployeeProfileComponent implements OnInit {
   openAssignmentDialog(employeePublicId: string) {
     const emp = this.employee();
     this.dialog.open(AssignmentDialogComponent, {
-      data: { employeeId: employeePublicId, employeeName: emp?.fullName },
+      data: { employeePublicId, employeeName: emp?.fullName },
       width: '90vw', maxWidth: '1200px',
       panelClass: 'assignment-dialog-panel'
     });

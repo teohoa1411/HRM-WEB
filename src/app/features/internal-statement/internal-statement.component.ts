@@ -12,6 +12,8 @@ import {
   InternalEmployeeCalendar,
   InternalCalendarDay
 } from '../../core/services/internal-statement.service';
+import { TimesheetService } from '../../core/services/timesheet.service';
+import { TimesheetLock } from '../../core/models/timesheet.models';
 import { MonthPickerComponent } from '../../shared/components/month-picker/month-picker.component';
 
 @Component({
@@ -32,8 +34,8 @@ import { MonthPickerComponent } from '../../shared/components/month-picker/month
     </div>
     <div class="is-header-right">
       <app-month-picker [value]="selectedMonth" (valueChange)="onMonthPickerChanged($event)" />
-      <button class="btn-action btn-blue" [disabled]="generating()" (click)="generate()"
-        matTooltip="Tổng hợp lại từ timesheet + nghỉ phép">
+      <button class="btn-action btn-blue" [disabled]="generating() || !authService.canPreparePayroll() || !timesheetLock()?.accountantConfirmed" (click)="generate()"
+        [matTooltip]="!timesheetLock()?.accountantConfirmed ? 'Cần Kế toán xác nhận timesheet trước' : 'Tổng hợp lại từ timesheet + nghỉ phép'">
         @if (generating()) { <mat-spinner diameter="16"></mat-spinner> }
         @else { <mat-icon>sync</mat-icon> }
         Tổng hợp
@@ -42,27 +44,10 @@ import { MonthPickerComponent } from '../../shared/components/month-picker/month
         matTooltip="Xuất Excel biên bản nội bộ">
         <mat-icon>download</mat-icon> Xuất Excel
       </button>
-      @if (hasUncConfirmed()) {
+      @if (hasUncConfirmed() && canConfirmStatement()) {
         <button class="btn-action btn-purple" [disabled]="loading()" (click)="confirmAll()">
           <mat-icon>check_circle</mat-icon> Xác nhận tất cả
         </button>
-      }
-      @if (!hasUncConfirmed() && overview().length > 0) {
-        @if (!monthClosed()) {
-          <button class="btn-action" style="background:#dc2626;color:#fff;" (click)="closeMonth()">
-            <mat-icon>lock</mat-icon> Đóng biên bản tháng
-          </button>
-        } @else {
-          <span style="background:#fee2e2;color:#dc2626;padding:4px 12px;border-radius:8px;font-weight:600;">
-            <mat-icon style="font-size:16px;width:16px;height:16px;vertical-align:middle;">lock</mat-icon>
-            ĐÃ ĐÓNG
-          </span>
-          @if (authService.isCompanyAdmin()) {
-            <button class="btn-action" style="background:#059669;color:#fff;" (click)="reopenMonth()">
-              <mat-icon>lock_open</mat-icon> Mở lại
-            </button>
-          }
-        }
       }
     </div>
   </div>
@@ -100,16 +85,18 @@ import { MonthPickerComponent } from '../../shared/components/month-picker/month
         </div>
       </div>
       <div class="detail-actions">
+        @if (isDraft()) {
         <button class="btn-action btn-blue" (click)="refreshEmployee()">
           <mat-icon>refresh</mat-icon> Làm mới
         </button>
-        @if (calendarData()?.status !== 'CONFIRMED') {
+        }
+        @if (isDraft() && canConfirmStatement()) {
           <button class="btn-action btn-purple" (click)="confirmCurrentEmployee()">
             <mat-icon>check_circle</mat-icon> Xác nhận
           </button>
-        } @else {
+        } @else if (calendarData()?.status === 'CONFIRMED' && canConfirmStatement()) {
           <button class="btn-action btn-gray" (click)="unconfirmCurrentEmployee()">
-            <mat-icon>cancel</mat-icon> Hủy xác nhận
+            <mat-icon>lock_open</mat-icon> Mở lại
           </button>
         }
       </div>
@@ -134,6 +121,7 @@ import { MonthPickerComponent } from '../../shared/components/month-picker/month
                 <th class="th-dow">Thứ</th>
                 <th class="th-raw">Giờ Log</th>
                 <th class="th-leave">Nghỉ phép</th>
+                <th class="th-raw">OT × hệ số</th>
                 <th class="th-adj">Giờ Điều Chỉnh</th>
                 <th class="th-note">Ghi Chú TS</th>
                 <th class="th-note">Ghi Chú HR</th>
@@ -159,6 +147,18 @@ import { MonthPickerComponent } from '../../shared/components/month-picker/month
                         @if (day.leaveTypeName) { <span class="leave-type">{{ day.leaveTypeName }}</span> }
                       </span>
                     } @else { <span class="no-leave">—</span> }
+                  </td>
+
+                  <td class="td-raw">
+                    @if (editingDate === day.workDate) {
+                      <div class="edit-cell">
+                        <input type="number" class="hours-input" [(ngModel)]="editOtHours" min="0" max="24" step="0.5">
+                        <input type="number" class="hours-input" [(ngModel)]="editOtMultiplier" min="0.1" max="5" step="0.1">
+                        <input type="text" class="note-input" [(ngModel)]="editOtReason" placeholder="Lý do đổi hệ số OT">
+                      </div>
+                    } @else {
+                      <span class="hours-badge" [class.zero]="day.adjustedOtHours === 0">{{ day.adjustedOtHours | number:'1.0-1' }}H × {{ day.otMultiplier | number:'1.0-1' }}</span>
+                    }
                   </td>
 
                   <!-- Editable adjusted hours -->
@@ -200,7 +200,7 @@ import { MonthPickerComponent } from '../../shared/components/month-picker/month
                       </div>
                     } @else {
                       <button class="btn-icon btn-edit" (click)="startEdit(day)"
-                        [disabled]="calendarData()?.status === 'CONFIRMED'"
+                        [disabled]="!isDraft()"
                         matTooltip="Chỉnh sửa">
                         <mat-icon>edit</mat-icon>
                       </button>
@@ -220,6 +220,7 @@ import { MonthPickerComponent } from '../../shared/components/month-picker/month
                     {{ calendarData()?.totalLeaveDays }}N + {{ calendarData()?.totalHalfLeaveDays }}½
                   </span>
                 </td>
+                <td class="td-raw"><span class="hours-badge">{{ calendarData()?.totalAdjustedOtHours | number:'1.0-1' }}H OT</span></td>
                 <td class="td-adj">
                   <span class="adj-hours modified">{{ calendarData()?.totalAdjustedHours | number:'1.0-1' }}H
                     = {{ calendarData()?.totalAdjustedDays | number:'1.1-1' }} ngày công</span>
@@ -512,6 +513,7 @@ import { MonthPickerComponent } from '../../shared/components/month-picker/month
 })
 export class InternalStatementComponent implements OnInit {
   private svc = inject(InternalStatementService);
+  private timesheetSvc = inject(TimesheetService);
   private snack = inject(MatSnackBar);
   readonly authService = inject(AuthService);
 
@@ -521,19 +523,22 @@ export class InternalStatementComponent implements OnInit {
   readonly generating = signal(false);
   readonly calendarLoading = signal(false);
   readonly overview = signal<InternalOverviewItem[]>([]);
+  readonly timesheetLock = signal<TimesheetLock | null>(null);
   readonly detailView = signal(false);
   readonly calendarData = signal<InternalEmployeeCalendar | null>(null);
-  readonly monthClosed = signal(false);
 
   // edit state
   editingDate: string | null = null;
   editHours = 0;
+  editOtHours = 0;
+  editOtMultiplier = 1.5;
+  editOtReason = '';
   editNote = '';
-  private currentEmployeeId: number | null = null;
+  private currentEmployeePublicId: string | null = null;
 
-  readonly confirmedCount = computed(() => this.overview().filter(e => e.status === 'CONFIRMED' || e.status === 'CLOSED').length);
-  readonly draftCount = computed(() => this.overview().filter(e => e.status !== 'CONFIRMED' && e.status !== 'CLOSED').length);
-  readonly hasUncConfirmed = computed(() => this.overview().some(e => e.status !== 'CONFIRMED' && e.status !== 'CLOSED'));
+  readonly confirmedCount = computed(() => this.overview().filter(e => e.status === 'CONFIRMED').length);
+  readonly draftCount = computed(() => this.overview().filter(e => e.status === 'DRAFT').length);
+  readonly hasUncConfirmed = computed(() => this.overview().some(e => e.status === 'DRAFT'));
 
   ngOnInit() { this.loadOverview(); }
 
@@ -547,19 +552,26 @@ export class InternalStatementComponent implements OnInit {
 
   loadOverview() {
     this.loading.set(true);
+    this.timesheetSvc.getLockStatus(this.selectedMonth).subscribe({
+      next: lock => this.timesheetLock.set(lock),
+      error: () => this.timesheetLock.set(null)
+    });
     this.svc.getOverview(this.selectedMonth).subscribe({
       next: data => {
         this.overview.set(data);
-        // Check if any employee status is CLOSED to determine monthClosed
-        const isClosed = data.some(e => e.status === 'CLOSED');
-        this.monthClosed.set(isClosed);
         this.loading.set(false);
       },
-      error: () => { this.overview.set([]); this.monthClosed.set(false); this.loading.set(false); }
+      error: () => { this.overview.set([]); this.loading.set(false); }
     });
   }
 
   generate() {
+    if (!this.timesheetLock()?.accountantConfirmed) {
+      this.snack.open(
+        `Timesheet tháng ${this.selectedMonth} chưa được Kế toán xác nhận. Vui lòng xác nhận timesheet trước.`,
+        'X', { duration: 5000 });
+      return;
+    }
     this.generating.set(true);
     this.svc.generate(this.selectedMonth).subscribe({
       next: () => {
@@ -567,7 +579,10 @@ export class InternalStatementComponent implements OnInit {
         this.snack.open('Đã tổng hợp biên bản nội bộ', 'OK', { duration: 2000 });
         this.loadOverview();
       },
-      error: () => { this.generating.set(false); this.snack.open('Lỗi khi tổng hợp', 'X', { duration: 3000 }); }
+      error: (err: any) => {
+        this.generating.set(false);
+        this.snack.open(err?.error?.message || 'Lỗi khi tổng hợp', 'X', { duration: 5000 });
+      }
     });
   }
 
@@ -588,70 +603,82 @@ export class InternalStatementComponent implements OnInit {
   }
 
   openDetail(emp: InternalOverviewItem) {
-    this.currentEmployeeId = emp.employeeId;
+    this.currentEmployeePublicId = emp.employeePublicId;
     this.editingDate = null;
     this.detailView.set(true);
-    this.loadEmployeeCalendar(emp.employeeId);
+    this.loadEmployeeCalendar(emp.employeePublicId);
   }
 
   closeDetail() {
     this.detailView.set(false);
     this.calendarData.set(null);
-    this.currentEmployeeId = null;
+    this.currentEmployeePublicId = null;
     this.editingDate = null;
     this.loadOverview();
   }
 
-  loadEmployeeCalendar(employeeId: number) {
+  loadEmployeeCalendar(employeePublicId: string) {
     this.calendarLoading.set(true);
-    this.svc.getEmployeeCalendar(this.selectedMonth, employeeId).subscribe({
+    this.svc.getEmployeeCalendar(this.selectedMonth, employeePublicId).subscribe({
       next: data => { this.calendarData.set(data); this.calendarLoading.set(false); },
       error: () => { this.calendarLoading.set(false); this.snack.open('Lỗi tải dữ liệu', 'X', { duration: 3000 }); }
     });
   }
 
   refreshEmployee() {
-    if (!this.currentEmployeeId) return;
-    this.svc.generateForEmployee(this.currentEmployeeId, this.selectedMonth).subscribe({
-      next: () => { this.loadEmployeeCalendar(this.currentEmployeeId!); },
-      error: () => this.snack.open('Lỗi khi làm mới', 'X', { duration: 3000 })
+    if (!this.currentEmployeePublicId) return;
+    if (!this.timesheetLock()?.accountantConfirmed) {
+      this.snack.open(
+        `Timesheet tháng ${this.selectedMonth} chưa được Kế toán xác nhận. Không thể làm mới biên bản nội bộ.`,
+        'X', { duration: 5000 });
+      return;
+    }
+    this.svc.generateForEmployee(this.currentEmployeePublicId, this.selectedMonth).subscribe({
+      next: () => { this.loadEmployeeCalendar(this.currentEmployeePublicId!); },
+      error: (err: any) => this.snack.open(err?.error?.message || 'Lỗi khi làm mới', 'X', { duration: 5000 })
     });
   }
 
   confirmCurrentEmployee() {
-    if (!this.currentEmployeeId) return;
-    this.svc.confirmEmployee(this.selectedMonth, this.currentEmployeeId).subscribe({
+    if (!this.currentEmployeePublicId) return;
+    this.svc.confirmEmployee(this.selectedMonth, this.currentEmployeePublicId).subscribe({
       next: () => {
         this.snack.open('Đã xác nhận biên bản', 'OK', { duration: 2000 });
-        this.loadEmployeeCalendar(this.currentEmployeeId!);
+        this.loadEmployeeCalendar(this.currentEmployeePublicId!);
       },
       error: () => this.snack.open('Lỗi khi xác nhận', 'X', { duration: 3000 })
     });
   }
 
   unconfirmCurrentEmployee() {
-    if (!this.currentEmployeeId) return;
-    this.svc.unconfirmEmployee(this.selectedMonth, this.currentEmployeeId).subscribe({
+    if (!this.currentEmployeePublicId) return;
+    this.svc.unconfirmEmployee(this.selectedMonth, this.currentEmployeePublicId).subscribe({
       next: () => {
         this.snack.open('Đã hủy xác nhận', 'OK', { duration: 2000 });
-        this.loadEmployeeCalendar(this.currentEmployeeId!);
+        this.loadEmployeeCalendar(this.currentEmployeePublicId!);
       },
       error: () => this.snack.open('Lỗi', 'X', { duration: 3000 })
     });
   }
 
+  isDraft(): boolean { return this.calendarData()?.status === 'DRAFT'; }
+  canConfirmStatement(): boolean { return this.authService.canConfirmFinancialData(); }
+
   startEdit(day: InternalCalendarDay) {
     this.editingDate = day.workDate;
     this.editHours = day.adjustedHours;
+    this.editOtHours = day.adjustedOtHours;
+    this.editOtMultiplier = day.otMultiplier;
+    this.editOtReason = day.otAdjustmentReason ?? '';
     this.editNote = day.hrNote ?? '';
   }
 
   cancelEdit() { this.editingDate = null; }
 
   saveDay(day: InternalCalendarDay) {
-    if (!this.currentEmployeeId || this.editingDate === null) return;
-    this.svc.updateDay(this.selectedMonth, this.currentEmployeeId, this.editingDate,
-      this.editHours, this.editNote).subscribe({
+    if (!this.currentEmployeePublicId || this.editingDate === null) return;
+    this.svc.updateDay(this.selectedMonth, this.currentEmployeePublicId, this.editingDate,
+      this.editHours, this.editOtHours, this.editOtMultiplier, this.editOtReason, this.editNote).subscribe({
       next: updated => {
         // Cập nhật local calendar
         const cal = this.calendarData();
@@ -659,10 +686,13 @@ export class InternalStatementComponent implements OnInit {
           const days = cal.days.map(d => d.workDate === updated.workDate ? updated : d);
           const totalRaw = days.reduce((s, d) => s + d.rawHours, 0);
           const totalAdj = days.reduce((s, d) => s + d.adjustedHours, 0);
+          const totalRawOt = days.reduce((s, d) => s + d.rawOtHours, 0);
+          const totalAdjOt = days.reduce((s, d) => s + d.adjustedOtHours, 0);
           // Bug 6: Cập nhật cả leave count
           const totalLeaveDays = days.filter(d => d.leaveDay).length;
           const totalHalfLeaveDays = days.filter(d => d.halfLeave).length;
           this.calendarData.set({ ...cal, days, totalRawHours: totalRaw, totalAdjustedHours: totalAdj,
+            totalRawOtHours: totalRawOt, totalAdjustedOtHours: totalAdjOt,
             totalAdjustedDays: totalAdj / 8, totalLeaveDays, totalHalfLeaveDays });
         }
         this.editingDate = null;
@@ -707,31 +737,4 @@ export class InternalStatementComponent implements OnInit {
     return colors[h % colors.length];
   }
 
-  closeMonth() {
-    const reason = prompt('Nhập lý do đóng biên bản tháng (tùy chọn):');
-    if (reason === null) return;
-    if (!confirm(`Đóng biên bản nội bộ tháng ${this.selectedMonth}?\n\nTimesheet sẽ bị khóa hoàn toàn.`)) return;
-    this.svc.closeMonth(this.selectedMonth, reason || undefined).subscribe({
-      next: () => {
-        this.monthClosed.set(true);
-        this.snack.open('Đã đóng — timesheet đã khóa', 'OK', { duration: 3000 });
-        this.loadOverview();
-      },
-      error: (err) => this.snack.open(err?.error?.message || 'Lỗi', 'X', { duration: 3000 })
-    });
-  }
-
-  reopenMonth() {
-    const reason = prompt('Nhập lý do mở lại (bắt buộc):');
-    if (!reason) { this.snack.open('Phải nhập lý do', 'X', { duration: 3000 }); return; }
-    if (!confirm(`Mở lại biên bản nội bộ tháng ${this.selectedMonth}?`)) return;
-    this.svc.reopenMonth(this.selectedMonth, reason).subscribe({
-      next: () => {
-        this.monthClosed.set(false);
-        this.snack.open('Đã mở lại', 'OK', { duration: 3000 });
-        this.loadOverview();
-      },
-      error: (err) => this.snack.open(err?.error?.message || 'Lỗi', 'X', { duration: 3000 })
-    });
-  }
 }

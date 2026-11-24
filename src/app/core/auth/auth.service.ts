@@ -169,8 +169,14 @@ export class AuthService implements OnDestroy {
   }
 
   isSuperAdmin(): boolean { return this.hasRole('SUPER_ADMIN'); }
-  isCompanyAdmin(): boolean { return this.hasRole('COMPANY_ADMIN', 'MANAGER'); }
-  isAccountant(): boolean { return this.hasRole('ACCOUNTANT', 'MANAGER'); }
+  /** COMPANY_ADMIN hoặc MANAGER. Dùng cho quyền chung của hai vai trò này. */
+  isAdminOrManager(): boolean { return this.hasRole('COMPANY_ADMIN', 'MANAGER'); }
+  /** Chỉ COMPANY_ADMIN — không bao gồm MANAGER. Dùng để ẩn các action cấu hình hệ thống. */
+  isStrictAdmin(): boolean { return this.hasRole('COMPANY_ADMIN'); }
+  isAccountant(): boolean { return this.hasRole('ACCOUNTANT'); }
+  canPreparePayroll(): boolean { return this.hasRole('MANAGER', 'ACCOUNTANT', 'COMPANY_ADMIN'); }
+  canConfirmFinancialData(): boolean { return this.hasRole('ACCOUNTANT', 'COMPANY_ADMIN'); }
+  canMarkPayrollPaid(): boolean { return this.hasRole('ACCOUNTANT', 'COMPANY_ADMIN'); }
   isEmployee(): boolean { return this.hasRole('EMPLOYEE'); }
 
   clearMustChangePassword() {

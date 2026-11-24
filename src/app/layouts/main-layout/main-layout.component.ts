@@ -336,8 +336,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
     if (role === 'SUPER_ADMIN') {
       sections.push({ title: 'System', items: [
-        { label: 'Companies', icon: 'business', route: '/companies', roles: ['SUPER_ADMIN'] },
-        { label: 'Job Roles', icon: 'work', route: '/job-roles', roles: ['SUPER_ADMIN'] }
+        { label: 'Companies', icon: 'business', route: '/companies', roles: ['SUPER_ADMIN'] }
       ]});
     }
 
@@ -382,11 +381,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       sections.push({ title: 'Nhân sự', items: [
         { label: 'Nhân viên', icon: 'people', route: '/employees', roles: ['MANAGER'] },
         { label: 'Quản lý tài khoản', icon: 'manage_accounts', route: '/users', roles: ['MANAGER'] },
-        { label: 'Phòng ban', icon: 'corporate_fare', route: '/departments', roles: ['MANAGER'] }
       ]});
       sections.push({ title: 'Hợp đồng', items: [
         { label: 'Quản lý hợp đồng', icon: 'description', route: '/contracts', roles: ['MANAGER'] },
-        { label: 'Loại hợp đồng', icon: 'category', route: '/contracts/types', roles: ['MANAGER'] }
       ]});
       sections.push({ title: 'Lịch & Chấm công', items: [
         { label: 'Lịch làm việc', icon: 'calendar_month', route: '/work-calendars', roles: ['MANAGER'] },
@@ -400,8 +397,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         { label: 'Bảo hiểm', icon: 'health_and_safety', route: '/insurance', roles: ['MANAGER'] },
         { label: 'Bảng lương', icon: 'payments', route: '/payroll', roles: ['MANAGER'] },
         { label: 'Biên bản KH', icon: 'description', route: '/statements/customer', roles: ['MANAGER'] },
-        { label: 'Biên bản Vendor', icon: 'receipt_long', route: '/statements/vendor', roles: ['MANAGER'] },
-        { label: 'Báo cáo tài chính', icon: 'account_balance', route: '/financial-report', roles: ['MANAGER'] }
+        { label: 'Biên bản Vendor', icon: 'receipt_long', route: '/statements/vendor', roles: ['MANAGER'] }
       ]});
     }
 
@@ -411,8 +407,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         { label: 'Bảo hiểm', icon: 'health_and_safety', route: '/insurance', roles: ['ACCOUNTANT'] },
         { label: 'Bảng lương', icon: 'payments', route: '/payroll', roles: ['ACCOUNTANT'] },
         { label: 'Biên bản KH', icon: 'description', route: '/statements/customer', roles: ['ACCOUNTANT'] },
-        { label: 'Biên bản Vendor', icon: 'receipt_long', route: '/statements/vendor', roles: ['ACCOUNTANT'] },
-        { label: 'Báo cáo tài chính', icon: 'account_balance', route: '/financial-report', roles: ['ACCOUNTANT'] }
+        { label: 'Biên bản Vendor', icon: 'receipt_long', route: '/statements/vendor', roles: ['ACCOUNTANT'] }
       ]});
     }
 
